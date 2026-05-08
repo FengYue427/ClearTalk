@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: cleartalk-api
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://cleartalk.vercel.app,http://localhost:8080
+    disk:
+      name: cleartalk-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1

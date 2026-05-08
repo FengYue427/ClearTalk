@@ -1,0 +1,22 @@
+{
+  "name": "ClearTalk - 沟通助手",
+  "short_name": "ClearTalk",
+  "description": "AI驱动的沟通文本生成助手，帮助您清晰得体地表达诉求",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#5B8DEF",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "screenshots": []
+}

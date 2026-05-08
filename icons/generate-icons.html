@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClearTalk 图标生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+        h1 {
+            color: #333;
+            font-size: 24px;
+        }
+        .instructions {
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            line-height: 1.8;
+            color: #666;
+        }
+        .instructions ol {
+            margin-left: 20px;
+        }
+        .instructions li {
+            margin: 10px 0;
+        }
+        .icons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+        }
+        .icon-container {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .icon-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #5B8DEF 0%, #74B9FF 100%);
+            border-radius: 22%;
+            position: relative;
+            overflow: hidden;
+        }
+        .icon-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 100%);
+        }
+        .icon-text {
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .size-label {
+            font-size: 14px;
+            color: #999;
+            font-weight: 500;
+        }
+        .filename {
+            font-size: 13px;
+            color: #5B8DEF;
+            background: #5B8DEF15;
+            padding: 6px 12px;
+            border-radius: 6px;
+        }
+
+        /* 各个尺寸 */
+        .size-512 { width: 512px; height: 512px; }
+        .size-384 { width: 384px; height: 384px; }
+        .size-192 { width: 192px; height: 192px; font-size: 80px; }
+        .size-152 { width: 152px; height: 152px; font-size: 64px; }
+        .size-144 { width: 144px; height: 144px; font-size: 60px; }
+        .size-128 { width: 128px; height: 128px; font-size: 54px; }
+        .size-96  { width: 96px; height: 96px; font-size: 40px; }
+        .size-72  { width: 72px; height: 72px; font-size: 30px; }
+
+        @media (max-width: 768px) {
+            .icons-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>ClearTalk 图标生成器</h1>
+    
+    <div class="instructions">
+        <strong>使用说明：</strong>
+        <ol>
+            <li>右键点击下方的图标 → "在新标签页打开图片" 或直接用截图工具截图</li>
+            <li>保存为对应文件名的 PNG 格式（如：icon-192x192.png）</li>
+            <li>将所有图标文件放入 icons 文件夹</li>
+            <li>刷新 ClearTalk 页面即可生效</li>
+        </ol>
+        <p style="margin-top: 15px; color: #999; font-size: 13px;">
+            提示：使用浏览器开发者工具可以更方便地截图指定尺寸的图标
+        </p>
+    </div>
+
+    <div class="icons-grid">
+        <div class="icon-container">
+            <div class="icon-box size-512">
+                <span class="icon-text">CT</span>
+            </div>
+            <span class="size-label">512 x 512</span>
+            <span class="filename">icon-512x512.png</span>
+        </div>
+
+        <div class="icon-container">
+            <div class="icon-box size-384">
+                <span class="icon-text">CT</span>
+            </div>
+            <span class="size-label">384 x 384</span>
+            <span class="filename">icon-384x384.png</span>
+        </div>
+
+        <div class="icon-container">
+            <div class="icon-box size-192">
+                <span class="icon-text">CT</span>
+            </div>
+            <span class="size-label">192 x 192</span>
+            <span class="filename">icon-192x192.png</span>
+        </div>
+
+        <div class="icon-container">
+            <div class="icon-box size-152">
+                <span class="icon-text">CT</span>
+            </div>
+            <span class="size-label">152 x 152</span>
+            <span class="filename">icon-152x152.png</span>
+        </div>
+
+        <div class="icon-container">
+            <div class="icon-box size-144">
+                <span class="icon-text">CT</span>
+            </div>
+            <span class="size-label">144 x 144</span>
+            <span class="filename">icon-144x144.png</span>
+        </div>
+
+        <div class="icon-container">
+            <div class="icon-box size-128">
+                <span class="icon-text">CT</span>
+            </div>
+            <span class="size-label">128 x 128</span>
+            <span class="filename">icon-128x128.png</span>
+        </div>
+
+        <div class="icon-container">
+            <div class="icon-box size-96">
+                <span class="icon-text">CT</span>
+            </div>
+            <span class="size-label">96 x 96</span>
+            <span class="filename">icon-96x96.png</span>
+        </div>
+
+        <div class="icon-container">
+            <div class="icon-box size-72">
+                <span class="icon-text">CT</span>
+            </div>
+            <span class="size-label">72 x 72</span>
+            <span class="filename">icon-72x72.png</span>
+        </div>
+    </div>
+
+    <script>
+        // 自动提示截图方法
+        console.log('ClearTalk 图标生成器');
+        console.log('提示：按 F12 打开开发者工具，使用 Elements 面板的节点截图功能');
+    </script>
+</body>
+</html>

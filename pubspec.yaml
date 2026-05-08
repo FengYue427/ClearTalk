@@ -1,0 +1,57 @@
+name: cleartalk
+description: A communication helper app for young people to express themselves clearly
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  
+  # State management
+  flutter_riverpod: ^2.4.9
+  
+  # Local storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  
+  # HTTP for AI APIs
+  dio: ^5.4.0
+  
+  # Share functionality
+  share_plus: ^7.2.1
+
+  # Path provider for file export
+  path_provider: ^2.1.2
+  
+  # Local storage
+  shared_preferences: ^2.2.2
+
+  file_picker: ^8.0.0
+
+  crypto: ^3.0.3
+
+  # Date formatting
+  intl: ^0.20.2
+  
+  # UI components
+  flutter_animate: ^4.3.0
+  
+  # Speech recognition
+  speech_to_text: ^6.6.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  mockito: ^5.4.4
+  build_runner: ^2.4.7
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/templates/

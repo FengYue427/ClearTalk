@@ -1,0 +1,62 @@
+{
+  "users": [
+    {
+      "id": "1777850999086",
+      "username": "xiaosheng001",
+      "email": "18562177928@163.com",
+      "password": "$2a$10$qo1plK9WuU2u3TD7xdx2lut57n44u6avCrWVui20nvnHHr2S09Jwq",
+      "createdAt": "2026-05-03T23:29:59.086Z",
+      "updatedAt": "2026-05-03T23:29:59.086Z",
+      "isEmailVerified": false
+    }
+  ],
+  "userData": [
+    {
+      "userId": "1777850999086",
+      "dataType": "history",
+      "data": [
+        {
+          "sceneId": "reschedule",
+          "sceneName": "改期协商",
+          "sceneIcon": "📅",
+          "tone": "soft",
+          "formValues": {
+            "original": "Friday 13：00",
+            "reason": "to plan to picnic",
+            "alternatives": "Friday 17：00"
+          },
+          "text": "Sorry, due to to plan to picnic, the original arrangement needs to be adjusted. Friday 13：00, Friday 17：00I hope to reschedule. Very sorry for the inconvenience.",
+          "id": "1777895466122",
+          "createdAt": "2026-05-04T11:51:06.122Z"
+        }
+      ],
+      "updatedAt": "2026-05-04T23:45:01.435Z"
+    },
+    {
+      "userId": "1777850999086",
+      "dataType": "scenes",
+      "data": [],
+      "updatedAt": "2026-05-04T23:45:01.435Z"
+    },
+    {
+      "userId": "1777850999086",
+      "dataType": "settings",
+      "data": {
+        "language": "en",
+        "theme": "dark",
+        "haptic": true,
+        "batchMode": false,
+        "lastSyncTime": 1777938298006
+      },
+      "updatedAt": "2026-05-04T23:45:01.435Z"
+    },
+    {
+      "userId": "1777850999086",
+      "dataType": "phrases",
+      "data": [],
+      "updatedAt": "2026-05-04T23:45:01.435Z"
+    }
+  ],
+  "scenes": [],
+  "likes": []
+}
