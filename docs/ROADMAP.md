@@ -19,6 +19,18 @@
 | 6（S4） | 多版本输出、对话流式、35 场景、Flutter 粘贴/反馈、SEO |
 | 7（S5） | 配额/Pro 预备、AI 粘贴分类、场景落地页、合规页、Flutter 分享卡片 |
 | 8（S6） | 上市清单同步、Runbook、launch:verify、Admin 看板、注册合规链 |
+| 8b | 第二轮审查：场景 i18n 同步、设置语言修复、UI 硬编码清理 |
+
+---
+
+## 阶段 8b：质量审查（已完成）
+
+| 任务 | 状态 |
+|------|------|
+| 设置语言/主题/AI 持久化 | ✅ |
+| 35 场景中英文（Flutter → Web） | ✅ `sync-scene-i18n.mjs` |
+| 路由标题与空状态 i18n | ✅ |
+| `launch:verify` 全绿 | ✅ |
 
 ---
 
@@ -70,14 +82,30 @@
 | 注册合规链接 | ✅ | 注册页链 privacy/terms/disclaimer |
 | 隐私政策修订 | ✅ | 补充服务端存储说明 |
 
-**待运维（你方执行）**：Vercel + Render 部署、域名、SMTP、Sentry
+**待运维（你方执行）**：Vercel + Render 部署、域名、SMTP、Sentry、确认生产 URL
+
+详见 [`docs/POST_LAUNCH_ROADMAP.md`](POST_LAUNCH_ROADMAP.md)。
 
 ---
 
-## 阶段 9：商业化（有 DAU 后）
+## 阶段 9：运营稳固（上市后 0–4 周）
+
+- 生产 SMTP + 关闭验证码 API 回显
+- Sentry、自定义域名、SQLite 备份
+- CI 集成 `launch:verify`
+
+## 阶段 10：体验与增长（1–2 月）
+
+- 字段 i18n 补全、语气 UI、市场 UGC、看板增强
+
+## 阶段 11：商业化（有 DAU 后）
 
 - Pro 订阅支付（Stripe/微信）
-- 成就 / 段位（可选）
+- 托管数据库（Postgres/Turso）
+
+## 阶段 12：智能化（差异化）
+
+- 粘贴多轮澄清、个性化推荐、多语言扩展
 
 ---
 

@@ -1,6 +1,6 @@
 # ClearTalk 真正上市检查清单
 
-> 与代码库同步日期：2026-05-21（S5 之后）  
+> 与代码库同步日期：2026-05-21（S6 + 第二轮审查 `165a0a0e`）  
 > 图例：**✅ 代码已就绪** · **🚀 待运维/你方部署** · **⚠️ 需人工确认（法务/域名）**
 
 ---
@@ -15,6 +15,31 @@
 | S5 已落地 | 配额、AI 粘贴分类、场景深链 `#/scene/{id}`、合规静态页 |
 | 仍待部署 | 真实域名、生产 env、Vercel/Render 一键发布 |
 | 建议修改（本次已做） | 注册页合规链接、隐私政策补充服务端数据说明、`render.yaml` SQLite 路径、S6 上线脚本与 Admin 看板 |
+| 第二轮审查（代码） | i18n 场景同步、`setLanguage` 修复、设置合并、路由标题本地化；`npm run launch:verify` 全绿 |
+
+---
+
+## 第二轮审查结论（2026-05-21）
+
+**代码与构建：可上市。** 未发现新的 P0 功能缺陷、路由错误、设置失效或大面积 UI 遮挡问题。
+
+| 类别 | 结论 |
+|------|------|
+| 本地化 | 35 场景名/描述/字段已接 `scene-l10n` + Flutter 同步；剩余：`main.js` file:// 警告、静态法务页仅中文、SMTP 邮件中文 |
+| 设置 | 主题/语言/触感/AI/同步/导出/清空 行为正确 |
+| 路由 | `#/home`…`#/settings`、`#/scene/{id}` 正常 |
+| 自动化 | 单元测试 9/9；E2E 需 preview 服务（本地可 `npm run test:e2e`） |
+
+**上线前仍需你方确认的运维项（非代码）：**
+
+| 项 | 说明 |
+|----|------|
+| 生产 URL | 打开 Vercel 部署地址，应见 **35 场景 + 粘贴分析**，而非其他产品登录页 |
+| Render API | `https://<api>/health/ready` 返回 `ok`；文档示例 `cleartalk-api.onrender.com` 若 404 表示未部署或已更名 |
+| 邮箱 | 生产配置 `EMAIL_*`；否则 API **模拟模式**会在响应中返回验证码（仅适合内测） |
+| 法务 | `privacy.html` / `terms.html` 建议法务终审 |
+
+拓展规划见 [`docs/POST_LAUNCH_ROADMAP.md`](POST_LAUNCH_ROADMAP.md)。
 
 ---
 
@@ -63,7 +88,7 @@
 |----|------|------|
 | 错误监控 | 🚀 | 建议 Sentry（前端 + API） |
 | 备份策略 | 🚀 | SQLite 文件定期备份（Render disk 路径） |
-| 邮件 SMTP | 🚀 | 生产配置 `EMAIL_*`；关闭模拟验证码回显 |
+| 邮件 SMTP | 🚀 | 生产配置 `EMAIL_*`；未配置时 API 会在 JSON 中回传 `code`/`resetUrl`（仅内测） |
 | 埋点看板 | ✅ | `public/admin.html` + `GET /api/events/stats` |
 | 客服渠道 | ✅ | 设置页 `mailto:feedback@cleartalk.app` |
 | SEO | ✅ | `seo-service.js`、`robots.txt`、`npm run sitemap`（36 URL） |
@@ -88,8 +113,10 @@
 
 1. **双前端**：仅对外宣传 Vite 主站；`deploy-web.yml`（Flutter Web）勿与主站混用。
 2. **本地 AI 模板**：部分 `legacy` 模板 id 与场景 id 不一致，离线模式可能通用化。
-3. **E2E**：CI 不跑代理 AI（无 Key）。
+3. **E2E**：CI 已跑 build+Playwright，但不测真实代理 AI（无 Key）。
 4. **隐私政策旧版表述**：已增「服务端数据」章节，上线前建议法务过一遍。
+5. **i18n 边角**：`checkProtocol` 中文硬编码；语气描述 UI 截断 20 字；Flutter 历史页部分中文按钮。
+6. **公网域名**：`cleartalk.vercel.app` / `clear-talk.vercel.app` 可能指向其他项目，以你 Vercel 项目 **Deployments → Visit** 为准。
 
 ---
 
