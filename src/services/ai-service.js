@@ -7,12 +7,67 @@ import { logger } from '../core/logger.js';
 import { state } from '../core/state.js';
 import { Storage } from '../core/storage.js';
 import { t } from '../core/i18n.js';
+import { resolveTone } from '../scenes/index.js';
+import { API_BASE_URL, DEFAULT_SETTINGS } from '../core/config.js';
+import { QuotaService } from './quota-service.js';
+
+function getAiSettings() {
+  return {
+    provider: Storage.getSetting('aiProvider', DEFAULT_SETTINGS.aiProvider),
+    model: Storage.getSetting('aiModel', DEFAULT_SETTINGS.aiModel),
+    useStream: Storage.getSetting('useStream', DEFAULT_SETTINGS.useStream)
+  };
+}
+
+function getVersionPrompt(version, isZh) {
+  const v = version || 'standard';
+  const map = isZh
+    ? {
+        short: '生成简短版本（约 100–200 字），适合微信/短信，保留核心诉求',
+        formal: '生成正式完整版本，结构严谨，适合邮件或工单',
+        softened: '生成「降火」版本：语气缓和、立场清晰，避免激化矛盾',
+        standard: '生成标准版本，结构完整、清晰明确'
+      }
+    : {
+        short: 'Generate a short version (100–200 words) suitable for chat/SMS',
+        formal: 'Generate a formal, complete version suitable for email',
+        softened: 'Generate a de-escalation version: softer tone, clear stance',
+        standard: 'Generate a standard complete version'
+      };
+  return map[v] || map.standard;
+}
+
+function buildScenePrompt(scene, values, toneKey, version = 'standard') {
+  const isZh = state.language === 'zh';
+  const tone = typeof toneKey === 'string' ? resolveTone(toneKey, t) : resolveTone(toneKey?.key || 'neutral', t);
+  return {
+    prompt: AI_CONFIG.scenePrompt(scene, values, tone, isZh, version),
+    tone
+  };
+}
 
 // AI 服务配置
 const AI_CONFIG = {
   // 场景生成提示词模板
-  scenePrompt: (scene, values, tone, isZh) => isZh 
-    ? `你是专业的沟通顾问。根据以下场景和用户提供的信息，生成一段得体、清晰的沟通文本。
+  scenePrompt: (scene, values, tone, isZh, version = 'standard') => {
+    const versionLine = getVersionPrompt(version, isZh);
+    const fieldsBlock = Object.entries(values)
+      .filter(([_, v]) => v !== undefined && v !== null && v !== '')
+      .map(([k, v]) => {
+        const field = scene.fields.find((f) => f.key === k);
+        const dynamicKey = `scene.field.${scene.id || 'generic'}.${k}`;
+        const fieldLabel =
+          t(dynamicKey) !== dynamicKey
+            ? t(dynamicKey)
+            : field?.translationKey
+              ? t(field.translationKey)
+              : field?.label || k;
+        return `${fieldLabel}: ${v}`;
+      })
+      .join('\n');
+
+    if (isZh) {
+      return `你是专业的沟通顾问。根据以下场景和用户提供的信息，生成一段得体、清晰的沟通文本。
 
 场景：${scene.name}
 场景描述：${scene.description}
@@ -20,24 +75,19 @@ const AI_CONFIG = {
 语气要求：${tone.promptModifier}
 
 用户提供的信息：
-${Object.entries(values)
-  .filter(([_, v]) => v !== undefined && v !== null && v !== '')
-  .map(([k, v]) => {
-    const field = scene.fields.find(f => f.key === k);
-    const dynamicKey = `scene.field.${scene.id || 'generic'}.${k}`;
-    const fieldLabel = t(dynamicKey) !== dynamicKey ? t(dynamicKey) : (field?.translationKey ? t(field.translationKey) : (field?.label || k));
-    return `${fieldLabel}: ${v}`;
-  }).join('\n')}
+${fieldsBlock}
 
 要求：
-1. 使用【背景】【事实】【诉求】【期限/期望】【结尾】的结构
-2. 语气符合要求
-3. 语言自然，符合中文沟通习惯
-4. 不要过度道歉，保持平等姿态
-5. 总字数控制在 200 字以内
+1. ${versionLine}
+2. 使用【背景】【事实】【诉求】【期限/期望】【结尾】的结构
+3. 语气符合要求
+4. 语言自然，符合中文沟通习惯
+5. 不要过度道歉，保持平等姿态
 
-直接输出文本，不要添加任何解释。`
-    : `You are a professional communication consultant. Generate a proper and clear communication text based on the following scenario and user information.
+直接输出文本，不要添加任何解释。`;
+    }
+
+    return `You are a professional communication consultant. Generate a proper and clear communication text based on the following scenario and user information.
 
 Scenario: ${scene.translationKey ? t(scene.translationKey) : scene.name}
 Description: ${scene.descriptionKey ? t(scene.descriptionKey) : scene.description}
@@ -45,23 +95,17 @@ Tone: ${tone.translationKey ? t(tone.translationKey) : tone.label}
 Tone Requirements: ${tone.promptModifierKey ? t(tone.promptModifierKey) : tone.promptModifier}
 
 User Information:
-${Object.entries(values)
-  .filter(([_, v]) => v !== undefined && v !== null && v !== '')
-  .map(([k, v]) => {
-    const field = scene.fields.find(f => f.key === k);
-    const dynamicKey = `scene.field.${scene.id || 'generic'}.${k}`;
-    const fieldLabel = t(dynamicKey) !== dynamicKey ? t(dynamicKey) : (field?.translationKey ? t(field.translationKey) : (field?.label || k));
-    return `${fieldLabel}: ${v}`;
-  }).join('\n')}
+${fieldsBlock}
 
 Requirements:
-1. Use structure: [Background][Facts][Request][Deadline/Expectation][Closing]
-2. Match the requested tone
-3. Natural language appropriate for English communication
-4. Don't over-apologize, maintain equal stance
-5. Keep within 200 words
+1. ${versionLine}
+2. Use structure: [Background][Facts][Request][Deadline/Expectation][Closing]
+3. Match the requested tone
+4. Natural language appropriate for English communication
+5. Don't over-apologize, maintain equal stance
 
-Output text directly without explanation.`,
+Output text directly without explanation.`;
+  },
 
   // 润色提示词模板
   polishPrompt: (text, target, isZh) => isZh
@@ -308,6 +352,35 @@ function generateLocal(scene, values, tone) {
   return tonePrefix[tone.key] + parts.join(isZh ? '，' : ', ') + (isZh ? '。' : '.');
 }
 
+function parseDialogueResponse(text) {
+  const raw = String(text || '').trim();
+  try {
+    const json = JSON.parse(raw);
+    if (json.reply) {
+      return {
+        reply: String(json.reply),
+        suggestions: Array.isArray(json.suggestions) ? json.suggestions.slice(0, 3) : []
+      };
+    }
+  } catch {
+    const match = raw.match(/\{[\s\S]*"reply"[\s\S]*\}/);
+    if (match) {
+      try {
+        const json = JSON.parse(match[0]);
+        if (json.reply) {
+          return {
+            reply: String(json.reply),
+            suggestions: Array.isArray(json.suggestions) ? json.suggestions.slice(0, 3) : []
+          };
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+  return { reply: raw, suggestions: [] };
+}
+
 // 调用第三方 AI API (OpenAI/DeepSeek)
 async function callThirdPartyAI(prompt, temperature = 0.7, maxTokens = 500) {
   const provider = Storage.getSetting('aiProvider', 'local');
@@ -347,57 +420,127 @@ async function callThirdPartyAI(prompt, temperature = 0.7, maxTokens = 500) {
 
 // AI 服务主对象
 export const AIService = {
+  getAiSettings,
+
+  /** SSE 流式生成（需后端 /api/ai/generate-stream） */
+  async generateStream(scene, values, toneKey, onChunk, version = 'standard') {
+    const { prompt } = buildScenePrompt(scene, values, toneKey, version);
+    const { model } = getAiSettings();
+
+    await QuotaService.checkBeforeGenerate();
+    const url = `${API_BASE_URL || ''}/api/ai/generate-stream`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, temperature: 0.7, maxTokens: 1000, model })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      if (response.status === 429) {
+        const e = new Error('QUOTA_EXCEEDED');
+        e.quota = err.quota;
+        throw e;
+      }
+      throw new Error(err.error || `HTTP ${response.status}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullText = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data: ')) continue;
+        const data = trimmed.slice(6);
+        if (data === '[DONE]') return fullText.trim();
+
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.error) throw new Error(parsed.error);
+          if (parsed.content) {
+            fullText += parsed.content;
+            onChunk(parsed.content, fullText);
+          }
+          if (parsed.done) return fullText.trim();
+        } catch (e) {
+          if (e.message && !e.message.includes('JSON')) throw e;
+        }
+      }
+    }
+
+    return fullText.trim();
+  },
+
+  shouldUseStream() {
+    const { provider, useStream } = getAiSettings();
+    return useStream && provider === 'proxy';
+  },
+
   // 场景文本生成
-  async generate(scene, values, tone) {
+  async generate(scene, values, toneKey, version = 'standard') {
     const isZh = state.language === 'zh';
-    
+    const { prompt, tone } = buildScenePrompt(scene, values, toneKey, version);
+    const { provider, model } = getAiSettings();
+
     try {
-      // 检查是否有必填字段
       const requiredFields = scene.fields.filter(f => f.required);
-      const hasAllRequired = requiredFields.every(f => values[f.key] && values[f.key].trim() !== '');
-      
+      const hasAllRequired = requiredFields.every(f => {
+        const v = values[f.key];
+        return v !== undefined && v !== null && String(v).trim() !== '';
+      });
+
       if (!hasAllRequired) {
         throw new Error(isZh ? '请填写必填字段' : 'Please fill in required fields');
       }
-      
-      // 优先尝试调用后端 API
-      try {
+
+      if (provider === 'local') {
+        await QuotaService.checkBeforeGenerate();
+        const text = generateLocal(scene, values, tone);
+        await QuotaService.recordGenerate();
+        return text;
+      }
+
+      if (provider === 'proxy') {
+        await QuotaService.checkBeforeGenerate();
         const result = await api.post('/api/ai/generate', {
-          prompt: AI_CONFIG.scenePrompt(scene, values, tone, isZh),
-          temperature: 0.7
+          prompt,
+          temperature: 0.7,
+          maxTokens: 1000,
+          model
         });
-        
-        if (result && result.text) {
-          return result.text.trim();
-        }
-      } catch (apiErr) {
-        logger.debug('Backend API failed, trying third-party AI:', apiErr.message);
+        if (result?.text) return result.text.trim();
+        throw new Error('Empty response');
       }
-      
-      // 后端失败，尝试直接调用第三方 AI
-      const prompt = AI_CONFIG.scenePrompt(scene, values, tone, isZh);
-      const text = await callThirdPartyAI(prompt, 0.7, 500);
-      
-      if (text) {
-        return text.trim();
-      }
-      
+
+      const text = await callThirdPartyAI(prompt, 0.7, 1000);
+      if (text) return text.trim();
       throw new Error('Empty response');
     } catch (err) {
       logger.warn('AI generation failed, falling back to local:', err);
-      // 降级到本地生成
       return generateLocal(scene, values, tone);
     }
   },
   
   // 自由形式 AI 调用
   async freeform({ prompt, temperature = 0.7, maxTokens = 2000 }) {
+    const { model } = getAiSettings();
     const result = await api.post('/api/ai/generate', {
       prompt,
       temperature,
-      maxTokens
+      maxTokens,
+      model
     });
-    
+
     return result?.text || '';
   },
   
@@ -441,6 +584,52 @@ export const AIService = {
     }
   },
   
+  /** 对话流式（SSE，需 proxy + useStream） */
+  async generateDialogueStream({ messages, personality, topic, context }, onChunk) {
+    const isZh = state.language === 'zh';
+    const prompt = AI_CONFIG.dialoguePrompt(messages, personality, topic, context, isZh);
+    const { model } = getAiSettings();
+    const url = `${API_BASE_URL || ''}/api/ai/generate-stream`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, temperature: 0.8, maxTokens: 500, model })
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${response.status}`);
+    }
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullText = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data: ')) continue;
+        const data = trimmed.slice(6);
+        if (data === '[DONE]') return parseDialogueResponse(fullText.trim());
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.error) throw new Error(parsed.error);
+          if (parsed.content) {
+            fullText += parsed.content;
+            onChunk?.(parsed.content, fullText);
+          }
+          if (parsed.done) return parseDialogueResponse(fullText.trim());
+        } catch (e) {
+          if (e.message && !e.message.includes('JSON')) throw e;
+        }
+      }
+    }
+    return parseDialogueResponse(fullText.trim());
+  },
+
   // 对话回复生成
   async generateDialogueReply({ messages, personality, topic, context }) {
     const isZh = state.language === 'zh';
@@ -451,22 +640,7 @@ export const AIService = {
         maxTokens: 500
       });
       
-      const text = result?.text || '';
-      
-      // 尝试解析 JSON
-      try {
-        const json = JSON.parse(text);
-        if (json.reply) {
-          return {
-            reply: String(json.reply),
-            suggestions: Array.isArray(json.suggestions) ? json.suggestions.slice(0, 3) : []
-          };
-        }
-      } catch {
-        // 解析失败，返回纯文本
-      }
-      
-      return { reply: text, suggestions: [] };
+      return parseDialogueResponse(result?.text || '');
     } catch (err) {
       logger.error('Dialogue generation failed:', err);
       throw err;

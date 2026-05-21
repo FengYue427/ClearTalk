@@ -12,6 +12,8 @@ import { initUser } from './user.js';
 import { initHistory } from './history.js';
 import { initDialogue } from './dialogue.js';
 import { initSettings } from './settings.js';
+import { Seo } from '../../services/seo-service.js';
+import { getSceneById } from '../../scenes/index.js';
 
 // 页面配置
 const PAGES = {
@@ -51,6 +53,22 @@ export function initRouter() {
   
   // 初始渲染
   navigateTo('home', false);
+  handleSceneDeepLink();
+  window.addEventListener('hashchange', handleSceneDeepLink);
+}
+
+/** 场景落地页：#/scene/leave_request */
+export function handleSceneDeepLink() {
+  const hash = (window.location.hash || '').replace(/^#\/?/, '');
+  const match = hash.match(/^scene\/([a-z0-9_]+)/i);
+  if (!match) return;
+
+  const scene = getSceneById(match[1]);
+  if (!scene) return;
+
+  state.currentScene = scene;
+  state.formValues = {};
+  navigateTo('scene-detail', false);
 }
 
 // 导航到页面
@@ -163,6 +181,7 @@ function updatePageTitle(page) {
   };
   
   document.title = titles[page] || 'ClearTalk';
+  Seo.updateForPage(page);
 }
 
 // 注册新页面（动态扩展）

@@ -6,6 +6,8 @@ import { state, subscribe } from '../../core/state.js';
 import { Storage } from '../../core/storage.js';
 import { triggerHaptic, debounce, events } from '../../core/utils.js';
 import { CATEGORIES, BUILTIN_SCENES, getScenesByCategory, searchScenes } from '../../scenes/index.js';
+import { analyzePasteText } from '../../services/paste-service.js';
+import { Analytics } from '../../services/analytics-service.js';
 import { createSceneCard, createEmptyState, showToast } from '../components/index.js';
 import { initSceneDetail } from './scene-detail.js';
 import { navigateTo } from './router.js';
@@ -34,6 +36,9 @@ export function initHome() {
 
   // 渲染头部（如果还没有）
   renderHeader(page);
+
+  // 粘贴分析入口
+  renderQuickPaste(page);
 
   // 渲染搜索栏
   renderSearchBar(page);
@@ -134,6 +139,115 @@ function renderHeader(container) {
   bindHeaderEvents(header);
   
   container.insertBefore(header, container.firstChild);
+}
+
+// 粘贴消息 → 推荐场景
+function renderQuickPaste(container) {
+  if (container.querySelector('.quick-paste')) return;
+
+  const section = document.createElement('section');
+  section.className = 'quick-paste';
+  section.innerHTML = `
+    <div class="quick-paste-header">
+      <span class="quick-paste-icon">💬</span>
+      <div>
+        <h3 class="quick-paste-title">${t('home.paste.title')}</h3>
+        <p class="quick-paste-desc">${t('home.paste.desc')}</p>
+      </div>
+    </div>
+    <textarea
+      id="quick-paste-input"
+      class="quick-paste-input"
+      rows="3"
+      placeholder="${t('home.paste.placeholder')}"
+    ></textarea>
+    <div class="quick-paste-actions">
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-paste-clipboard">${t('home.paste.from_clipboard')}</button>
+      <button type="button" class="btn btn-primary btn-sm" id="btn-analyze-paste">${t('home.paste.analyze')}</button>
+    </div>
+    <div id="quick-paste-results" class="quick-paste-results hidden"></div>
+  `;
+
+  const input = section.querySelector('#quick-paste-input');
+  const resultsEl = section.querySelector('#quick-paste-results');
+
+  section.querySelector('#btn-paste-clipboard').addEventListener('click', async () => {
+    try {
+      const clip = await navigator.clipboard.readText();
+      if (clip) {
+        input.value = clip;
+        analyzePaste(input.value, resultsEl);
+      } else {
+        showToast(t('home.paste.empty'));
+      }
+    } catch {
+      showToast(t('home.paste.clipboard_denied'));
+    }
+  });
+
+  section.querySelector('#btn-analyze-paste').addEventListener('click', () => {
+    analyzePaste(input.value, resultsEl);
+  });
+
+  container.appendChild(section);
+}
+
+async function analyzePaste(text, resultsEl) {
+  const trimmed = String(text || '').trim();
+  if (!trimmed) {
+    showToast(t('home.paste.empty'));
+    return;
+  }
+
+  triggerHaptic();
+  const customScenes = Storage.getCustomScenes();
+  const allScenes = [...BUILTIN_SCENES, ...customScenes];
+
+  resultsEl.classList.remove('hidden');
+  resultsEl.innerHTML = `<p class="quick-paste-loading">${t('common.loading')}</p>`;
+
+  const { matches, source } = await analyzePasteText(trimmed, allScenes, 3);
+  Analytics.track('paste_analyze', {
+    meta: { matchCount: matches.length, textLen: trimmed.length, source }
+  });
+
+  resultsEl.innerHTML = '';
+
+  if (matches.length === 0) {
+    resultsEl.innerHTML = `<p class="quick-paste-no-match">${t('home.paste.no_match')}</p>`;
+    return;
+  }
+
+  const title = document.createElement('p');
+  title.className = 'quick-paste-results-title';
+  title.textContent = t('home.paste.suggested');
+  resultsEl.appendChild(title);
+
+  const list = document.createElement('div');
+  list.className = 'quick-paste-match-list';
+
+  matches.forEach(({ scene, matchedKeywords }) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'quick-paste-match-item';
+    btn.innerHTML = `
+      <span class="match-icon">${scene.icon || '📝'}</span>
+      <span class="match-info">
+        <strong>${scene.name}</strong>
+        <small>${scene.category}${matchedKeywords.length ? ' · ' + matchedKeywords.slice(0, 2).join('、') : ''}</small>
+      </span>
+      <span class="match-arrow">→</span>
+    `;
+    btn.addEventListener('click', () => {
+      state.currentScene = scene;
+      state.formValues = { _pastedContext: trimmed };
+      navigateTo('scene-detail');
+      showToast(t('home.paste.opened', { name: scene.name }));
+    });
+    list.appendChild(btn);
+  });
+
+  resultsEl.appendChild(list);
 }
 
 // 渲染搜索栏

@@ -11,6 +11,7 @@ import '../widgets/page_transitions.dart';
 import 'input_page.dart';
 import 'history_page.dart';
 import 'user_page.dart';
+import '../services/paste_classify_service.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -20,6 +21,41 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  final _pasteController = TextEditingController();
+  List<SceneMatch> _pasteMatches = [];
+  bool _pasteAnalyzed = false;
+  bool _pasteLoading = false;
+  final _pasteClassify = PasteClassifyService();
+
+  @override
+  void dispose() {
+    _pasteController.dispose();
+    super.dispose();
+  }
+
+  void _analyzePaste() {
+    final i18n = AppI18n.of(context);
+    final text = _pasteController.text.trim();
+    if (text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(i18n.tr('home.paste.empty'))),
+      );
+      return;
+    }
+    setState(() {
+      _pasteLoading = true;
+      _pasteAnalyzed = false;
+      _pasteMatches = [];
+    });
+    final matches = await _pasteClassify.analyze(text);
+    if (!mounted) return;
+    setState(() {
+      _pasteLoading = false;
+      _pasteAnalyzed = true;
+      _pasteMatches = matches;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final categories = ref.watch(sceneCategoriesProvider);
@@ -74,6 +110,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
               ),
             ),
+
+            SliverToBoxAdapter(child: _buildQuickPaste(context, ref)),
 
             // 最近使用（如果有）
             if (recentRecords.isNotEmpty) ...[
@@ -201,6 +239,87 @@ class _HomePageState extends ConsumerState<HomePage> {
                   color: Colors.grey[500],
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickPaste(BuildContext context, WidgetRef ref) {
+    final i18n = AppI18n.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Card(
+        elevation: 1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                i18n.tr('home.paste.title'),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                i18n.tr('home.paste.desc'),
+                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _pasteController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: i18n.tr('home.paste.placeholder'),
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton(
+                  onPressed: _pasteLoading ? null : _analyzePaste,
+                  child: Text(_pasteLoading ? '…' : i18n.tr('home.paste.analyze')),
+                ),
+              ),
+              if (_pasteAnalyzed && _pasteMatches.isEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  i18n.tr('home.paste.no_match'),
+                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                ),
+              ],
+              if (_pasteMatches.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  i18n.tr('home.paste.suggested'),
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                ),
+                const SizedBox(height: 8),
+                ..._pasteMatches.map((m) {
+                  return ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(m.scene.name),
+                    subtitle: Text(m.scene.category),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      ref.read(selectedSceneProvider.notifier).state = m.scene;
+                      ref.read(formValuesProvider.notifier).state = {
+                        '_pastedContext': _pasteController.text.trim(),
+                      };
+                      ref.read(selectedToneProvider.notifier).state = 'neutral';
+                      Navigator.push(
+                        context,
+                        SlidePageRoute(page: InputPage(scene: m.scene)),
+                      );
+                    },
+                  );
+                }),
+              ],
             ],
           ),
         ),

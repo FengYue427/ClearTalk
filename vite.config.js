@@ -1,9 +1,14 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import legacy from '@vitejs/plugin-legacy';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   root: 'src',
+  publicDir: path.resolve(__dirname, 'public'),
   build: {
     outDir: '../dist',
     emptyOutDir: true,
@@ -17,11 +22,11 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        manualChunks: {
-          core: ['./core/state.js', './core/storage.js', './core/i18n.js'],
-          services: ['./services/ai-service.js', './services/sync-service.js', './services/user-service.js', './services/market-service.js'],
-          ui: ['./ui/components/index.js', './ui/pages/index.js'],
-          scenes: ['./scenes/index.js']
+        manualChunks(id) {
+          if (id.includes('/src/core/')) return 'core';
+          if (id.includes('/src/services/')) return 'services';
+          if (id.includes('/src/ui/')) return 'ui';
+          if (id.includes('/src/scenes/')) return 'scenes';
         }
       }
     }
@@ -42,11 +47,27 @@ export default defineConfig({
     }),
     VitePWA({
       registerType: 'autoUpdate',
-      manifest: false,
+      manifest: {
+        name: 'ClearTalk',
+        short_name: 'ClearTalk',
+        description: 'AI驱动的沟通文本生成助手',
+        theme_color: '#5B8DEF',
+        background_color: '#ffffff',
+        display: 'standalone',
+        icons: [
+          {
+            src: '/icons/icon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any maskable'
+          }
+        ]
+      },
       workbox: {
         clientsClaim: true,
         skipWaiting: true,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        navigateFallback: 'index.html'
       }
     })
   ],

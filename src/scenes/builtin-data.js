@@ -1,0 +1,2026 @@
+/**
+ * 内置场景（由 scripts/extract-scenes.mjs 从 assets/scenes/builtin.json 生成）
+ * 请勿手动编辑 — 修改 assets/scenes/builtin.json 后运行: npm run scenes:build
+ */
+export const BUILTIN_SCENES = [
+  {
+    "id": "leave_request",
+    "name": "请假申请",
+    "category": "职场沟通",
+    "description": "向上级申请休假，说明时间和原因",
+    "icon": "💼",
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "收件人称呼",
+        "placeholder": "如：王经理",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "leaveType",
+        "label": "请假类型",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "事假",
+          "病假",
+          "年假",
+          "调休",
+          "其他"
+        ]
+      },
+      {
+        "key": "startDate",
+        "label": "开始日期",
+        "placeholder": "如：2024年1月15日",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "endDate",
+        "label": "结束日期",
+        "placeholder": "如：2024年1月16日",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "days",
+        "label": "请假天数",
+        "placeholder": "如：2天",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reason",
+        "label": "请假原因",
+        "placeholder": "简要说明原因",
+        "type": "textarea",
+        "required": true,
+        "hint": "无需过于详细，点到为止即可"
+      },
+      {
+        "key": "handover",
+        "label": "工作交接安排",
+        "placeholder": "如：已交接给小张，紧急事务可电话联系",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "urgent_leave",
+    "name": "紧急请假",
+    "category": "职场沟通",
+    "description": "临时突发事件需要请假",
+    "icon": "💼",
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "收件人称呼",
+        "placeholder": "如：王经理",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "emergencyType",
+        "label": "紧急事由",
+        "placeholder": "如：家人突发疾病需送医",
+        "type": "text",
+        "required": true,
+        "hint": "简要说明即可，无需详述"
+      },
+      {
+        "key": "expectedBack",
+        "label": "预计返岗时间",
+        "placeholder": "如：明天下午或后天上午",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "contact",
+        "label": "紧急联系方式",
+        "placeholder": "如：手机保持畅通",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "overtime_confirm",
+    "name": "加班调休确认",
+    "category": "职场沟通",
+    "description": "确认加班时长和调休安排",
+    "icon": "💼",
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "收件人称呼",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "overtimeDate",
+        "label": "加班日期",
+        "placeholder": "如：1月10日",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "overtimeHours",
+        "label": "加班时长",
+        "placeholder": "如：3小时",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "workContent",
+        "label": "加班工作内容",
+        "placeholder": "简要说明",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "restRequest",
+        "label": "调休请求",
+        "placeholder": "如：希望本周五下午调休",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "salary_dispute",
+    "name": "工资/绩效异议",
+    "category": "职场沟通",
+    "description": "对工资或绩效结果提出疑问",
+    "icon": "💼",
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "收件人称呼",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "payPeriod",
+        "label": "涉及月份/周期",
+        "placeholder": "如：2024年1月工资",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "issueType",
+        "label": "问题类型",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "工资数额不符",
+          "绩效评分疑问",
+          "扣款原因不明",
+          "加班费未算",
+          "其他"
+        ]
+      },
+      {
+        "key": "expectedAmount",
+        "label": "预期金额",
+        "placeholder": "如：8000元",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "actualAmount",
+        "label": "实际金额",
+        "placeholder": "如：7500元",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "evidence",
+        "label": "相关依据",
+        "placeholder": "如：劳动合同约定/聊天记录/考勤记录",
+        "type": "textarea",
+        "required": false,
+        "hint": "有证据可简要提及，无证据也可沟通"
+      },
+      {
+        "key": "request",
+        "label": "具体诉求",
+        "placeholder": "如：请核实并补发差额500元",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "resignation_confirm",
+    "name": "离职交接确认",
+    "category": "职场沟通",
+    "description": "确认最后工作日和交接安排",
+    "icon": "💼",
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "收件人称呼",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "lastDate",
+        "label": "最后工作日",
+        "placeholder": "如：2024年2月28日",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "handoverTo",
+        "label": "交接对象",
+        "placeholder": "如：接交人：小李",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "handoverItems",
+        "label": "交接事项",
+        "placeholder": "如：项目文件、客户资料、账号权限等",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "salarySettle",
+        "label": "工资结算询问",
+        "placeholder": "如：请问工资和补偿金何时结算？",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "refund_rejected",
+    "name": "退款被拒申诉",
+    "category": "消费平台",
+    "description": "商品/服务问题申请退款",
+    "icon": "🛒",
+    "fields": [
+      {
+        "key": "platform",
+        "label": "平台/商家名称",
+        "placeholder": "如：XX电商平台/XX店铺",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "orderId",
+        "label": "订单号",
+        "placeholder": "如：123456789",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "productName",
+        "label": "商品/服务名称",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "amount",
+        "label": "订单金额",
+        "placeholder": "如：299元",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "purchaseDate",
+        "label": "购买日期",
+        "placeholder": "如：1月5日",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "refundReason",
+        "label": "退款原因",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "未收到货",
+          "货不对板",
+          "质量问题",
+          "与描述不符",
+          "七天无理由",
+          "其他"
+        ]
+      },
+      {
+        "key": "rejectedReason",
+        "label": "平台拒绝理由",
+        "placeholder": "如：影响二次销售",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "evidence",
+        "label": "证据说明",
+        "placeholder": "如：有开箱视频/照片为证",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "quality_issue",
+    "name": "货不对板/质量问题",
+    "category": "消费平台",
+    "description": "收到商品与描述不符或有质量问题",
+    "icon": "🛒",
+    "fields": [
+      {
+        "key": "platform",
+        "label": "平台/商家",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "orderId",
+        "label": "订单号",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "productName",
+        "label": "商品名称",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "issueDesc",
+        "label": "问题描述",
+        "placeholder": "如：颜色与图片完全不符/有明显划痕",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "photoEvidence",
+        "label": "是否有照片/视频证据",
+        "placeholder": "",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "key": "expectedSolution",
+        "label": "期望解决方案",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "退货退款",
+          "换货",
+          "部分退款补偿",
+          "补发",
+          "其他"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "auto_renewal",
+    "name": "自动续费申诉",
+    "category": "消费平台",
+    "description": "未收到提醒被自动扣费",
+    "icon": "🛒",
+    "fields": [
+      {
+        "key": "platform",
+        "label": "平台/服务名称",
+        "placeholder": "如：XX视频会员",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "chargeDate",
+        "label": "扣费日期",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "amount",
+        "label": "扣费金额",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "notified",
+        "label": "是否收到续费提醒",
+        "placeholder": "",
+        "type": "boolean",
+        "required": true
+      },
+      {
+        "key": "usageAfterCharge",
+        "label": "扣费后是否使用服务",
+        "placeholder": "",
+        "type": "boolean",
+        "required": true
+      },
+      {
+        "key": "request",
+        "label": "诉求",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "全额退款",
+          "按比例退款",
+          "取消自动续费",
+          "其他"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "food_delivery_issue",
+    "name": "外卖漏送/食安问题",
+    "category": "消费平台",
+    "description": "外卖订单出现问题",
+    "icon": "🛒",
+    "fields": [
+      {
+        "key": "platform",
+        "label": "外卖平台",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "美团",
+          "饿了么",
+          "其他"
+        ]
+      },
+      {
+        "key": "orderId",
+        "label": "订单号",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "issueType",
+        "label": "问题类型",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "漏送商品",
+          "送错商品",
+          "食品变质",
+          "异物",
+          "严重超时",
+          "其他"
+        ]
+      },
+      {
+        "key": "issueDesc",
+        "label": "问题描述",
+        "placeholder": "",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "hasPhoto",
+        "label": "是否有照片证据",
+        "placeholder": "",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "key": "expectedSolution",
+        "label": "期望解决",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "全额退款",
+          "补送",
+          "部分退款",
+          "优惠券补偿",
+          "其他"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "deposit_refund",
+    "name": "退押金沟通",
+    "category": "租房物业",
+    "description": "租约到期要求退还押金",
+    "icon": "🏠",
+    "fields": [
+      {
+        "key": "landlord",
+        "label": "房东/中介称呼",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "address",
+        "label": "房屋地址",
+        "placeholder": "简要提及",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "depositAmount",
+        "label": "押金金额",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "moveOutDate",
+        "label": "退租日期",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "handoverDone",
+        "label": "是否已交接房屋",
+        "placeholder": "",
+        "type": "boolean",
+        "required": true
+      },
+      {
+        "key": "condition",
+        "label": "房屋状况",
+        "placeholder": "如：已打扫干净，无损坏",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "deductionDispute",
+        "label": "是否有扣款争议",
+        "placeholder": "如：房东说墙面有污渍要扣500",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "maintenance_delay",
+    "name": "维修推诿沟通",
+    "category": "租房物业",
+    "description": "报修后物业/房东拖延处理",
+    "icon": "🏠",
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "收件人",
+        "placeholder": "如：物业/房东",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "address",
+        "label": "房屋地址",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "issue",
+        "label": "维修问题",
+        "placeholder": "如：水管漏水/热水器不工作",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reportDate",
+        "label": "首次报修日期",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "timesReported",
+        "label": "已报修次数",
+        "placeholder": "",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "urgency",
+        "label": "紧急程度",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "影响正常生活",
+          "有安全隐患",
+          "一般维修",
+          "其他"
+        ]
+      },
+      {
+        "key": "deadline",
+        "label": "期望处理时间",
+        "placeholder": "如：48小时内",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "loan_reminder",
+    "name": "借款催还",
+    "category": "人际金钱",
+    "description": "提醒朋友/熟人归还借款",
+    "icon": "💬",
+    "fields": [
+      {
+        "key": "borrower",
+        "label": "借款人称呼",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "amount",
+        "label": "借款金额",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "loanDate",
+        "label": "借款日期",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "promisedDate",
+        "label": "约定还款日期",
+        "placeholder": "",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "paymentMethod",
+        "label": "支付方式",
+        "placeholder": "如：微信/支付宝/银行卡",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "ownSituation",
+        "label": "自身情况（可选）",
+        "placeholder": "如：我最近也需要用钱",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "clarification",
+    "name": "事实说明/误会澄清",
+    "category": "人际金钱",
+    "description": "为自己澄清误会或说明事实",
+    "icon": "💬",
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "收件人",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "context",
+        "label": "事情背景",
+        "placeholder": "简要说明发生了什么",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "misunderstanding",
+        "label": "对方误解的点",
+        "placeholder": "如：对方以为是我泄露的消息",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "facts",
+        "label": "事实说明",
+        "placeholder": "客观陈述事实",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "evidence",
+        "label": "可佐证的事实",
+        "placeholder": "如：当时在场的还有XX",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "hope",
+        "label": "希望对方理解/做什么",
+        "placeholder": "如：希望能消除误会",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "noise_complaint",
+    "name": "噪音投诉",
+    "category": "日常生活",
+    "description": "向邻居或物业投诉噪音问题",
+    "icon": "🏡",
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "收件人",
+        "placeholder": "如：邻居/物业",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "noiseSource",
+        "label": "噪音来源",
+        "placeholder": "如：楼上装修/夜间音响",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "timePeriod",
+        "label": "发生时间段",
+        "placeholder": "如：每晚10点后/周末早上",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "duration",
+        "label": "持续时间",
+        "placeholder": "如：已持续一周",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "impact",
+        "label": "造成的影响",
+        "placeholder": "如：影响休息/孩子无法学习",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "previousContact",
+        "label": "是否已沟通过",
+        "placeholder": "",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "key": "request",
+        "label": "期望解决",
+        "placeholder": "如：请控制音量/调整装修时间",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "parking_occupied",
+    "name": "车位被占沟通",
+    "category": "日常生活",
+    "description": "联系占用你车位的人挪车",
+    "icon": "🏡",
+    "fields": [
+      {
+        "key": "location",
+        "label": "车位位置",
+        "placeholder": "如：地下车库B区128号",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "vehicleInfo",
+        "label": "占用车信息",
+        "placeholder": "如：白色奥迪A4，车牌京A12345",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "myVehicle",
+        "label": "您的车辆信息",
+        "placeholder": "如：黑色特斯拉，车牌京B67890",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "urgency",
+        "label": "紧急程度",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "急需用车",
+          "半小时内需要",
+          "今晚前挪走即可",
+          "其他"
+        ]
+      },
+      {
+        "key": "contactMethod",
+        "label": "联系方式",
+        "placeholder": "如：电话/微信/物业转达",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "package_issue",
+    "name": "快递问题投诉",
+    "category": "日常生活",
+    "description": "快递延误、丢失、损坏等问题",
+    "icon": "🏡",
+    "fields": [
+      {
+        "key": "courier",
+        "label": "快递公司",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "顺丰",
+          "中通",
+          "圆通",
+          "韵达",
+          "申通",
+          "京东",
+          "邮政",
+          "其他"
+        ]
+      },
+      {
+        "key": "trackingNo",
+        "label": "快递单号",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "issueType",
+        "label": "问题类型",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "延误超时",
+          "包裹丢失",
+          "包裹损坏",
+          "未经同意放驿站",
+          "虚假签收",
+          "其他"
+        ]
+      },
+      {
+        "key": "itemDesc",
+        "label": "物品描述",
+        "placeholder": "如：电子产品/衣物/文件",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "itemValue",
+        "label": "物品价值",
+        "placeholder": "如：500元",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "photoEvidence",
+        "label": "是否有照片证据",
+        "placeholder": "",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "key": "expectedSolution",
+        "label": "期望解决",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "尽快派送",
+          "赔偿损失",
+          "查找包裹",
+          "道歉解释",
+          "其他"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "pet_complaint",
+    "name": "宠物扰民沟通",
+    "category": "日常生活",
+    "description": "邻居宠物噪音或卫生问题",
+    "icon": "🏡",
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "收件人",
+        "placeholder": "如：邻居/物业",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "petType",
+        "label": "宠物类型",
+        "placeholder": "如：狗/猫",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "issueType",
+        "label": "问题类型",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "夜间吠叫",
+          "随地大小便",
+          "不牵绳吓人",
+          "气味影响",
+          "其他"
+        ]
+      },
+      {
+        "key": "frequency",
+        "label": "发生频率",
+        "placeholder": "如：每天/偶尔",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "impact",
+        "label": "造成的影响",
+        "placeholder": "如：影响睡眠/老人受惊",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "previousContact",
+        "label": "是否已沟通过",
+        "placeholder": "",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "key": "request",
+        "label": "期望解决",
+        "placeholder": "如：夜间注意控制/及时清理",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "gym_refund",
+    "name": "健身房退卡",
+    "category": "消费维权",
+    "description": "健身房退卡或转卡申请",
+    "icon": "⚖️",
+    "fields": [
+      {
+        "key": "gymName",
+        "label": "健身房名称",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "contractDate",
+        "label": "办卡日期",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "cardType",
+        "label": "卡种类型",
+        "placeholder": "如：年卡/季卡/私教课",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "paidAmount",
+        "label": "实付金额",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "usedTimes",
+        "label": "已使用次数/时长",
+        "placeholder": "如：去过5次/用了2个月",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "refundReason",
+        "label": "退卡原因",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "搬家/换工作",
+          "服务质量差",
+          "商家违约",
+          "身体原因",
+          "个人原因",
+          "其他"
+        ]
+      },
+      {
+        "key": "contractTerms",
+        "label": "合同条款说明",
+        "placeholder": "如：合同写可退/有违约金条款",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "expectedRefund",
+        "label": "期望退款金额",
+        "placeholder": "如：全额/按比例",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "beauty_refund",
+    "name": "美容院/理发店退费",
+    "category": "消费维权",
+    "description": "预付卡退款或服务投诉",
+    "icon": "⚖️",
+    "fields": [
+      {
+        "key": "shopName",
+        "label": "店铺名称",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "serviceType",
+        "label": "服务类型",
+        "placeholder": "如：美容卡/理发卡/项目套餐",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "paidAmount",
+        "label": "充值金额",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "remainingAmount",
+        "label": "剩余金额/次数",
+        "placeholder": "如：还剩300元/10次",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "refundReason",
+        "label": "退款原因",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "效果不满意",
+          "服务态度差",
+          "强制推销",
+          "店铺搬迁/关闭",
+          "个人原因",
+          "其他"
+        ]
+      },
+      {
+        "key": "evidence",
+        "label": "证据说明",
+        "placeholder": "如：有聊天记录/消费凭证",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "refusalReason",
+        "label": "商家拒绝理由",
+        "placeholder": "如：说特价不退/已过期",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "driving_school_refund",
+    "name": "驾校退费",
+    "category": "消费维权",
+    "description": "驾校退学或转校申请",
+    "icon": "⚖️",
+    "fields": [
+      {
+        "key": "schoolName",
+        "label": "驾校名称",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "enrollDate",
+        "label": "报名日期",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "paidAmount",
+        "label": "报名费用",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "progress",
+        "label": "学习进度",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "未开始",
+          "科目一",
+          "科目二",
+          "科目三",
+          "已考完"
+        ]
+      },
+      {
+        "key": "refundReason",
+        "label": "退费原因",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "教练态度差",
+          "约车困难",
+          "搬家/换城市",
+          "身体原因",
+          "个人原因",
+          "其他"
+        ]
+      },
+      {
+        "key": "contractTerms",
+        "label": "合同约定",
+        "placeholder": "如：合同写明了退费标准",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "expectedRefund",
+        "label": "期望退款",
+        "placeholder": "如：按比例退/扣除已考科目",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "course_refund",
+    "name": "课程退费申请",
+    "category": "教育培训",
+    "description": "培训班/网课退费",
+    "icon": "📚",
+    "fields": [
+      {
+        "key": "institution",
+        "label": "机构名称",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "courseName",
+        "label": "课程名称",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "enrollDate",
+        "label": "报名日期",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "paidAmount",
+        "label": "实付金额",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "progress",
+        "label": "上课进度",
+        "placeholder": "如：上了3节课/未开始",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "refundReason",
+        "label": "退费原因",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "课程内容不符",
+          "师资不符",
+          "时间安排冲突",
+          "个人原因",
+          "机构违约",
+          "其他"
+        ]
+      },
+      {
+        "key": "refundPolicy",
+        "label": "退款政策说明",
+        "placeholder": "如：7天无理由/合同约定",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "expectedRefund",
+        "label": "期望退款",
+        "placeholder": "如：全额/按比例",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "school_leave",
+    "name": "学校请假申请",
+    "category": "教育培训",
+    "description": "向学校/老师请假",
+    "icon": "📚",
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "收件人",
+        "placeholder": "如：班主任/辅导员",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "studentName",
+        "label": "学生姓名",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "classInfo",
+        "label": "班级信息",
+        "placeholder": "如：高三2班",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "leaveType",
+        "label": "请假类型",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "事假",
+          "病假",
+          "其他"
+        ]
+      },
+      {
+        "key": "startDate",
+        "label": "开始日期",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "endDate",
+        "label": "结束日期",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reason",
+        "label": "请假原因",
+        "placeholder": "简要说明",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "parentContact",
+        "label": "家长联系方式",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "tutor_arrange",
+    "name": "家教/培训沟通",
+    "category": "教育培训",
+    "description": "与家教或培训机构协调时间/内容",
+    "icon": "📚",
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "收件人",
+        "placeholder": "如：李老师/机构",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "studentName",
+        "label": "学生姓名",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "subject",
+        "label": "科目/课程",
+        "placeholder": "如：数学/英语口语",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "currentSchedule",
+        "label": "当前安排",
+        "placeholder": "如：每周六上午",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "requestType",
+        "label": "请求类型",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "调整时间",
+          "调整内容",
+          "暂停课程",
+          "更换老师",
+          "其他"
+        ]
+      },
+      {
+        "key": "newRequest",
+        "label": "新的请求",
+        "placeholder": "如：改到周日下午/加强写作训练",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "reason",
+        "label": "原因说明",
+        "placeholder": "如：周六有竞赛/写作是弱项",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "appointment_change",
+    "name": "预约改期/取消",
+    "category": "医疗健康",
+    "description": "医院/诊所预约改期或取消",
+    "icon": "🏥",
+    "fields": [
+      {
+        "key": "hospital",
+        "label": "医院/诊所名称",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "department",
+        "label": "科室",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "doctor",
+        "label": "医生姓名",
+        "placeholder": "如：王医生（可选）",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "originalDate",
+        "label": "原预约时间",
+        "placeholder": "如：2024年2月15日下午",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "changeType",
+        "label": "变更类型",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "改期",
+          "取消"
+        ]
+      },
+      {
+        "key": "newDate",
+        "label": "期望新时间（改期时）",
+        "placeholder": "如：2月20日上午",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "reason",
+        "label": "变更原因",
+        "placeholder": "如：临时出差/症状缓解",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "medical_record_inquiry",
+    "name": "检查报告询问",
+    "category": "医疗健康",
+    "description": "向医生咨询检查结果",
+    "icon": "🏥",
+    "fields": [
+      {
+        "key": "hospital",
+        "label": "医院名称",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "department",
+        "label": "科室",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "doctor",
+        "label": "医生称呼",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "examDate",
+        "label": "检查日期",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "examType",
+        "label": "检查项目",
+        "placeholder": "如：CT/核磁共振/验血",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "concern",
+        "label": "关心的问题",
+        "placeholder": "如：结节大小/指标异常",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "hasReport",
+        "label": "是否已取得报告",
+        "placeholder": "",
+        "type": "boolean",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "referral_request",
+    "name": "转诊沟通",
+    "category": "医疗健康",
+    "description": "请求医生开具转诊单",
+    "icon": "🏥",
+    "fields": [
+      {
+        "key": "hospital",
+        "label": "当前医院",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "department",
+        "label": "当前科室",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "doctor",
+        "label": "医生称呼",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "diagnosis",
+        "label": "当前诊断",
+        "placeholder": "简要说明病情",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "targetHospital",
+        "label": "目标医院",
+        "placeholder": "如：协和医院/三甲医院",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "targetDepartment",
+        "label": "目标科室",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reason",
+        "label": "转诊原因",
+        "placeholder": "如：需要更专业的检查/离家近",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "complaint_suggestion",
+    "name": "投诉建议",
+    "category": "政务服务",
+    "description": "向政府部门投诉或提建议",
+    "icon": "🏛️",
+    "fields": [
+      {
+        "key": "department",
+        "label": "受理部门",
+        "placeholder": "如：街道办/12345/市场监管局",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "subject",
+        "label": "投诉/建议主题",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "location",
+        "label": "涉及地点",
+        "placeholder": "如：XX路段/XX小区",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "issueDesc",
+        "label": "问题描述",
+        "placeholder": "详细说明情况",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "duration",
+        "label": "持续时间",
+        "placeholder": "如：已存在一个月",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "impact",
+        "label": "造成的影响",
+        "placeholder": "如：影响出行/安全隐患",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "previousReports",
+        "label": "是否已反映过",
+        "placeholder": "",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "key": "request",
+        "label": "期望处理",
+        "placeholder": "如：尽快维修/加强管理",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "admin_inquiry",
+    "name": "办事咨询",
+    "category": "政务服务",
+    "description": "咨询办事流程、所需材料",
+    "icon": "🏛️",
+    "fields": [
+      {
+        "key": "department",
+        "label": "咨询部门",
+        "placeholder": "如：户籍科/社保局",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "matter",
+        "label": "办理事项",
+        "placeholder": "如：户口迁移/社保转移",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "currentStatus",
+        "label": "当前情况",
+        "placeholder": "如：刚毕业/刚购房/工作调动",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "specificQuestions",
+        "label": "具体问题",
+        "placeholder": "如：需要什么材料/能否代办",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "contact",
+        "label": "联系方式",
+        "placeholder": "方便回复的电话/邮箱",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "document_progress",
+    "name": "证件办理进度询问",
+    "category": "政务服务",
+    "description": "询问证件办理进度",
+    "icon": "🏛️",
+    "fields": [
+      {
+        "key": "department",
+        "label": "办理部门",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "documentType",
+        "label": "证件类型",
+        "placeholder": "如：护照/身份证/房产证",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "applyDate",
+        "label": "申请日期",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "applicationNo",
+        "label": "申请编号",
+        "placeholder": "如：有回执单号可填",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "promisedDate",
+        "label": "承诺办结时间",
+        "placeholder": "如：15个工作日",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "currentStatus",
+        "label": "当前状态",
+        "placeholder": "如：已超过承诺时间/查询显示审核中",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "urgency",
+        "label": "紧急程度",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "急需使用",
+          "较着急",
+          "一般咨询"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "work_handover",
+    "name": "工作交接说明",
+    "category": "职场沟通",
+    "description": "离职或调岗时向同事说明交接事项",
+    "icon": "💼",
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "交接对象",
+        "placeholder": "如：李经理/接手同事",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "handoverDate",
+        "label": "交接时间",
+        "placeholder": "如：本周五前",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "projects",
+        "label": "负责项目/事项",
+        "placeholder": "列出需交接的工作",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "documents",
+        "label": "资料位置",
+        "placeholder": "如：共享盘路径、账号权限",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "contact",
+        "label": "后续联系方式",
+        "placeholder": "离职后是否可联系",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "meeting_followup",
+    "name": "会议纪要跟进",
+    "category": "职场沟通",
+    "description": "会议后发送纪要并跟进待办",
+    "icon": "💼",
+    "fields": [
+      {
+        "key": "meetingTitle",
+        "label": "会议主题",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "attendees",
+        "label": "参会人",
+        "placeholder": "",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "decisions",
+        "label": "决议要点",
+        "placeholder": "",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "actionItems",
+        "label": "待办事项",
+        "placeholder": "负责人与截止时间",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "deadline",
+        "label": "跟进节点",
+        "placeholder": "如：下周五前反馈",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "subscription_cancel",
+    "name": "取消订阅/会员",
+    "category": "消费维权",
+    "description": "要求取消自动续费或会员服务",
+    "icon": "⚖️",
+    "fields": [
+      {
+        "key": "platform",
+        "label": "平台/商家",
+        "placeholder": "如：某视频/健身 App",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "orderInfo",
+        "label": "订单/账号信息",
+        "placeholder": "订单号或注册手机号",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reason",
+        "label": "取消原因",
+        "placeholder": "简要说明",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "refundRequest",
+        "label": "是否要求退款",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "仅取消续费",
+          "取消并退最近一笔",
+          "全额退款"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "insurance_claim",
+    "name": "保险理赔沟通",
+    "category": "日常生活",
+    "description": "向保险公司说明理赔情况并催促处理",
+    "icon": "🏡",
+    "fields": [
+      {
+        "key": "insurer",
+        "label": "保险公司",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "policyNo",
+        "label": "保单号",
+        "placeholder": "",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "incident",
+        "label": "事故/损失说明",
+        "placeholder": "",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "claimNo",
+        "label": "报案号",
+        "placeholder": "如有",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "status",
+        "label": "当前进度",
+        "placeholder": "如：已提交材料一周无回复",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "neighbor_notice",
+    "name": "邻里事项通知",
+    "category": "日常生活",
+    "description": "装修、活动等事宜提前告知邻居",
+    "icon": "🏡",
+    "fields": [
+      {
+        "key": "matter",
+        "label": "事项",
+        "placeholder": "如：装修/聚会",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "timeRange",
+        "label": "时间",
+        "placeholder": "如：3月1日–15日 9:00–18:00",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "impact",
+        "label": "可能影响",
+        "placeholder": "如：可能有噪音",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "contact",
+        "label": "联系方式",
+        "placeholder": "方便邻居联系",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "wedding_invite_reply",
+    "name": "婚礼邀请回复",
+    "category": "人际金钱",
+    "description": "回复婚礼邀请，确认出席或婉拒",
+    "icon": "💬",
+    "fields": [
+      {
+        "key": "host",
+        "label": "新人称呼",
+        "placeholder": "如：小明和小红",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "attendance",
+        "label": "是否出席",
+        "placeholder": "",
+        "type": "select",
+        "required": true,
+        "options": [
+          "确认出席",
+          "可能出席",
+          "无法出席"
+        ]
+      },
+      {
+        "key": "guestCount",
+        "label": "出席人数",
+        "placeholder": "如：2人（本人+伴侣）",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "message",
+        "label": "祝福语/说明",
+        "placeholder": "",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  }
+];

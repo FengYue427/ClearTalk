@@ -27,7 +27,8 @@ export const STORAGE_KEYS = {
   INSTALL_PROMPTED: 'cleartalk_install_prompted',
   LAST_SYNC_TIME: 'lastSyncTime',
   AUTO_SYNC: 'autoSync',
-  SYNC_DIRECTION: 'syncDirection'
+  SYNC_DIRECTION: 'syncDirection',
+  FEEDBACK: 'cleartalk_feedback'
 };
 
 // 默认设置
@@ -36,8 +37,19 @@ export const DEFAULT_SETTINGS = {
   theme: 'auto',
   haptic: true,
   autoSync: false,
-  syncDirection: 'merge'
+  syncDirection: 'merge',
+  aiProvider: 'proxy',
+  aiModel: 'deepseek-chat',
+  useStream: true
 };
+
+/** 后端代理模式下的可选模型 */
+export const PROXY_AI_MODELS = [
+  { value: 'deepseek-chat', labelKey: 'settings.ai.model.deepseek_chat', provider: 'deepseek' },
+  { value: 'gpt-4o-mini', labelKey: 'settings.ai.model.gpt_4o_mini', provider: 'openai' },
+  { value: 'gpt-4o', labelKey: 'settings.ai.model.gpt_4o', provider: 'openai' },
+  { value: 'qwen-turbo', labelKey: 'settings.ai.model.qwen_turbo', provider: 'qwen' }
+];
 
 // 分页配置
 export const PAGINATION = {

@@ -5,6 +5,7 @@ import '../models/history_record.dart';
 import '../models/quick_phrase.dart';
 import '../services/storage_service.dart';
 import '../services/ai_service.dart';
+import '../services/proxy_ai_service.dart';
 import '../templates/builtin_scenes.dart';
 
 /// 存储服务 Provider
@@ -12,10 +13,9 @@ final storageServiceProvider = Provider<StorageService>((ref) {
   return StorageService();
 });
 
-/// AI 服务 Provider（默认使用 Mock，方便开发测试）
+/// AI 服务 Provider（默认走后端代理；可改回 MockAiService 离线调试）
 final aiServiceProvider = Provider<AiService>((ref) {
-  // 开发阶段使用 Mock，接入真实 API 时替换
-  return MockAiService();
+  return ProxyAiService();
 });
 
 /// 主题模式 Provider (system/light/dark) with persistence

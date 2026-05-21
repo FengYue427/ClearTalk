@@ -40,3 +40,17 @@ lib/config/secrets.dart
 
 # Test coverage
 coverage/
+
+# Web build
+dist/
+node_modules/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Backend data (may contain user info)
+backend/data/*.json
+!backend/data/.gitkeep

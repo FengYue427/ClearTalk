@@ -48,7 +48,7 @@ async function request(endpoint, options = {}) {
     // 处理错误
     if (!finalResponse.ok) {
       const error = await finalResponse.json().catch(() => ({ message: 'Request failed' }));
-      throw new Error(error.message || `HTTP ${finalResponse.status}`);
+      throw new Error(error.error || error.message || `HTTP ${finalResponse.status}`);
     }
     
     // 204 No Content

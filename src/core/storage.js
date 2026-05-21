@@ -117,6 +117,21 @@ export const Storage = {
     return this.set(STORAGE_KEYS.CUSTOM_SCENES, scenes);
   },
   
+  getFeedback() {
+    return this.get(STORAGE_KEYS.FEEDBACK, []);
+  },
+
+  saveFeedback(feedback) {
+    const list = this.getFeedback();
+    list.unshift({
+      ...feedback,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString()
+    });
+    if (list.length > 50) list.length = 50;
+    return this.set(STORAGE_KEYS.FEEDBACK, list);
+  },
+
   // 导出所有数据
   exportAll() {
     return {
@@ -124,6 +139,7 @@ export const Storage = {
       customScenes: this.getCustomScenes(),
       settings: this.get(STORAGE_KEYS.SETTINGS, {}),
       dialogueContexts: this.get(STORAGE_KEYS.DIALOGUE_CONTEXTS, {}),
+      feedback: this.getFeedback(),
       exportedAt: new Date().toISOString(),
       version: '1.0'
     };

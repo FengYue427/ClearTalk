@@ -303,22 +303,54 @@ async function generateReply(sendBtn, textarea) {
       setTimeout(() => reject(new Error('timeout')), 30000);
     });
 
-    const result = await Promise.race([
-      AIService.generateDialogueReply({
-        messages: state.dialogue.messages,
-        personality,
-        topic: state.dialogue.topic,
-        context: state.dialogue.context
-      }),
-      timeoutPromise
-    ]);
+    const useStream = AIService.shouldUseStream?.() ?? false;
+    let result;
 
-    // 添加AI消息
-    state.dialogue.messages.push({
-      role: 'other',
-      content: result.reply,
-      suggestions: result.suggestions
-    });
+    if (useStream) {
+      const placeholder = {
+        role: 'other',
+        content: '',
+        suggestions: []
+      };
+      state.dialogue.messages.push(placeholder);
+      initDialogue();
+      const bubble = document.querySelector('#dialogue-thread .message.other:last-child .message-text');
+
+      result = await Promise.race([
+        AIService.generateDialogueStream(
+          {
+            messages: state.dialogue.messages.slice(0, -1),
+            personality,
+            topic: state.dialogue.topic,
+            context: state.dialogue.context
+          },
+          (_chunk, full) => {
+            placeholder.content = full;
+            if (bubble) bubble.textContent = full;
+          }
+        ),
+        timeoutPromise
+      ]);
+
+      placeholder.content = result.reply;
+      placeholder.suggestions = result.suggestions;
+    } else {
+      result = await Promise.race([
+        AIService.generateDialogueReply({
+          messages: state.dialogue.messages,
+          personality,
+          topic: state.dialogue.topic,
+          context: state.dialogue.context
+        }),
+        timeoutPromise
+      ]);
+
+      state.dialogue.messages.push({
+        role: 'other',
+        content: result.reply,
+        suggestions: result.suggestions
+      });
+    }
 
   } catch (error) {
     logger.error('Dialogue generation failed:', error);
@@ -332,7 +364,11 @@ async function generateReply(sendBtn, textarea) {
     }
     showToast(t(errorKey));
 
-    // 降级到本地
+    const last = state.dialogue.messages[state.dialogue.messages.length - 1];
+    if (last?.role === 'other' && !last.content) {
+      state.dialogue.messages.pop();
+    }
+
     const fallbackReply = generateLocalReply();
     state.dialogue.messages.push({
       role: 'other',

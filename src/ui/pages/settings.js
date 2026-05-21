@@ -11,6 +11,8 @@ import { isOnline, downloadFile, events } from '../../core/utils.js';
 import { showToast, showConfirm, showActionSheet } from '../components/index.js';
 import { navigateTo } from './router.js';
 import { t, setLanguage } from '../../core/i18n.js';
+import { PROXY_AI_MODELS, DEFAULT_SETTINGS } from '../../core/config.js';
+import { QuotaService } from '../../services/quota-service.js';
 
 // 设置项定义 - 使用 i18n
 function getSettingsGroups() {
@@ -112,6 +114,7 @@ function getSettingsGroups() {
         label: t('settings.ai.provider'),
         type: 'select',
         options: [
+          { value: 'proxy', label: t('settings.ai.provider.proxy') },
           { value: 'local', label: t('settings.ai.provider.local') },
           { value: 'openai', label: t('settings.ai.provider.openai') },
           { value: 'deepseek', label: t('settings.ai.provider.deepseek') }
@@ -122,30 +125,40 @@ function getSettingsGroups() {
         label: t('settings.ai.model'),
         type: 'select',
         options: () => {
-          const provider = Storage.getSetting('aiProvider', 'local');
+          const provider = Storage.getSetting('aiProvider', DEFAULT_SETTINGS.aiProvider);
+          if (provider === 'proxy') {
+            return PROXY_AI_MODELS.map((m) => ({
+              value: m.value,
+              label: t(m.labelKey)
+            }));
+          }
           if (provider === 'openai') {
             return [
-              { value: 'gpt-5.5', label: `${t('settings.ai.model.gpt_5_5')} (${t('common.best')})` },
-              { value: 'gpt-5.5-mini', label: `${t('settings.ai.model.gpt_5_5_mini')} (${t('common.recommended')})` },
-              { value: 'gpt-5.2', label: 'GPT-5.2' },
-              { value: 'gpt-5', label: 'GPT-5' }
+              { value: 'gpt-4o', label: 'GPT-4o' },
+              { value: 'gpt-4o-mini', label: `${t('settings.ai.model.gpt_4o_mini')} (${t('common.recommended')})` }
             ];
           }
           if (provider === 'deepseek') {
             return [
-              { value: 'deepseek-v4-pro', label: `${t('settings.ai.model.deepseek_v4_pro')} (${t('common.best')})` },
-              { value: 'deepseek-v4-flash', label: `${t('settings.ai.model.deepseek_v4_flash')} (${t('common.recommended')})` }
+              { value: 'deepseek-chat', label: `${t('settings.ai.model.deepseek_chat')} (${t('common.recommended')})` }
             ];
           }
           return [{ value: 'local', label: t('settings.ai.model.local_templates') }];
         }
       },
       {
+        key: 'useStream',
+        label: t('settings.ai.stream'),
+        type: 'toggle',
+        disabled: () => Storage.getSetting('aiProvider', DEFAULT_SETTINGS.aiProvider) !== 'proxy'
+      },
+      {
         key: 'aiApiKey',
         label: t('settings.ai.apikey'),
         type: 'input',
         inputType: 'password',
-        placeholder: t('settings.ai.apikey.placeholder')
+        placeholder: t('settings.ai.apikey.placeholder'),
+        disabled: () => Storage.getSetting('aiProvider', DEFAULT_SETTINGS.aiProvider) === 'proxy'
       },
       {
         key: 'testAi',
@@ -169,6 +182,18 @@ function getSettingsGroups() {
         label: t('settings.privacy'),
         type: 'link',
         url: '/privacy.html'
+      },
+      {
+        key: 'disclaimer',
+        label: t('settings.disclaimer'),
+        type: 'link',
+        url: '/disclaimer.html'
+      },
+      {
+        key: 'terms',
+        label: t('settings.terms'),
+        type: 'link',
+        url: '/terms.html'
       },
       {
         key: 'feedback',
@@ -207,6 +232,22 @@ export function initSettings() {
 
   getSettingsGroups().forEach(group => {
     renderGroup(content, group);
+  });
+
+  const quotaBanner = document.createElement('div');
+  quotaBanner.className = 'settings-quota-banner';
+  quotaBanner.textContent = t('common.loading');
+  content.prepend(quotaBanner);
+  QuotaService.getStatus().then((q) => {
+    const tierLabel = q.tier === 'pro' ? 'Pro' : t('quota.tier.free');
+    quotaBanner.textContent = t('quota.status', {
+      used: q.used,
+      limit: q.limit,
+      remaining: q.remaining,
+      tier: tierLabel
+    });
+  }).catch(() => {
+    quotaBanner.textContent = '';
   });
 
   page.appendChild(content);
@@ -314,7 +355,10 @@ function renderGroup(container, group) {
         toggle.className = 'toggle';
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        checkbox.checked = state[item.key];
+        checkbox.checked = Storage.getSetting(
+          item.key,
+          DEFAULT_SETTINGS[item.key] ?? state[item.key] ?? false
+        );
         checkbox.addEventListener('change', (e) => {
           handleSettingChange(item.key, e.target.checked);
         });

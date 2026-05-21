@@ -377,6 +377,15 @@ function renderRegisterForm() {
         </div>
       </div>
       
+      <p class="auth-legal">
+        ${t('user.register.legal')}
+        <a href="/privacy.html" target="_blank" rel="noopener">${t('settings.privacy')}</a>
+        ·
+        <a href="/terms.html" target="_blank" rel="noopener">${t('settings.terms')}</a>
+        ·
+        <a href="/disclaimer.html" target="_blank" rel="noopener">${t('settings.disclaimer')}</a>
+      </p>
+
       <button type="submit" class="btn btn-primary btn-large btn-submit" id="btn-submit">
         <span class="btn-text">${t('user.button.register')}</span>
         <span class="btn-loading" style="display: none;">

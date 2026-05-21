@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ClearTalk Admin</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 24px; background: #f4f6fb; color: #222; }
+    h1 { color: #5b8def; font-size: 1.4rem; }
+    .card { background: #fff; border-radius: 12px; padding: 20px; margin: 16px 0; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    label { display: block; font-size: 13px; margin-bottom: 6px; color: #666; }
+    input { width: 100%; max-width: 420px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+    button { margin-top: 10px; padding: 10px 18px; background: #5b8def; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
+    pre { background: #f8f9fa; padding: 12px; border-radius: 8px; overflow: auto; font-size: 12px; }
+    .err { color: #c00; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #eee; }
+  </style>
+</head>
+<body>
+  <h1>ClearTalk 运营看板</h1>
+  <p style="color:#666;font-size:14px">需 <code>FEEDBACK_ADMIN_KEY</code>。API 地址默认同源或填写 Render 地址。</p>
+
+  <div class="card">
+    <label>API Base URL（留空则使用当前站点）</label>
+    <input id="api-base" type="url" placeholder="https://cleartalk-api.onrender.com" />
+    <label style="margin-top:12px">Admin Key</label>
+    <input id="admin-key" type="password" placeholder="FEEDBACK_ADMIN_KEY" />
+    <button type="button" id="btn-load">加载统计</button>
+    <p id="msg" class="err"></p>
+  </div>
+
+  <div class="card" id="panel-feedback" style="display:none">
+    <h2>反馈统计</h2>
+    <pre id="out-feedback"></pre>
+  </div>
+  <div class="card" id="panel-events" style="display:none">
+    <h2>埋点（近 7 天）</h2>
+    <pre id="out-events"></pre>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const stored = {
+      base: localStorage.getItem('ct_admin_base') || '',
+      key: localStorage.getItem('ct_admin_key') || ''
+    };
+    $('api-base').value = stored.base;
+    $('admin-key').value = stored.key;
+
+    async function fetchJson(path) {
+      const base = ($('api-base').value || '').replace(/\/$/, '') || '';
+      const key = $('admin-key').value.trim();
+      if (!key) throw new Error('请填写 Admin Key');
+      localStorage.setItem('ct_admin_base', $('api-base').value);
+      localStorage.setItem('ct_admin_key', key);
+      const url = (base || window.location.origin) + path + (path.includes('?') ? '&' : '?') + 'key=' + encodeURIComponent(key);
+      const res = await fetch(url, { headers: { 'X-Admin-Key': key } });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || res.statusText);
+      return data;
+    }
+
+    $('btn-load').onclick = async () => {
+      $('msg').textContent = '';
+      try {
+        const [fb, ev] = await Promise.all([
+          fetchJson('/api/feedback/stats'),
+          fetchJson('/api/events/stats?days=7')
+        ]);
+        $('out-feedback').textContent = JSON.stringify(fb, null, 2);
+        $('out-events').textContent = JSON.stringify(ev, null, 2);
+        $('panel-feedback').style.display = 'block';
+        $('panel-events').style.display = 'block';
+      } catch (e) {
+        $('msg').textContent = e.message;
+      }
+    };
+  </script>
+</body>
+</html>

@@ -13,6 +13,8 @@ import '../widgets/skeleton_loader.dart';
 import '../widgets/loading_indicator.dart';
 import 'home_page.dart';
 import 'dialogue_page.dart';
+import '../services/feedback_service.dart';
+import '../services/share_card_service.dart';
 
 class ResultPage extends ConsumerStatefulWidget {
   final SceneTemplate scene;
@@ -32,6 +34,8 @@ class _ResultPageState extends ConsumerState<ResultPage> {
   String _currentText = '';
   String _currentVersion = 'standard';
   bool _isGenerating = false;
+  bool _feedbackDone = false;
+  final _feedbackService = FeedbackService();
 
   @override
   void initState() {
@@ -103,6 +107,25 @@ class _ResultPageState extends ConsumerState<ResultPage> {
         SnackBar(content: Text('${i18n.tr('error.generate.failed')}: $e')),
       );
     }
+  }
+
+  Future<void> _submitFeedback(String type) async {
+    final i18n = AppI18n.of(context);
+    final tone = ref.read(selectedToneProvider);
+    await _feedbackService.submit(
+      type: type,
+      sceneId: widget.scene.id,
+      sceneName: widget.scene.name,
+      tone: tone,
+      textPreview: _currentText.length > 500
+          ? _currentText.substring(0, 500)
+          : _currentText,
+    );
+    if (!mounted) return;
+    setState(() => _feedbackDone = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(i18n.tr('feedback.thanks'))),
+    );
   }
 
   Future<void> _rewriteTone(Tone tone) async {
@@ -277,6 +300,29 @@ class _ResultPageState extends ConsumerState<ResultPage> {
               ),
             ),
 
+            if (!_feedbackDone)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        i18n.tr('feedback.prompt'),
+                        style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.thumb_up_outlined),
+                      onPressed: _isGenerating ? null : () => _submitFeedback('helpful'),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.thumb_down_outlined),
+                      onPressed: _isGenerating ? null : () => _submitFeedback('not_helpful'),
+                    ),
+                  ],
+                ),
+              ),
+
             // 风险提示
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -340,6 +386,23 @@ class _ResultPageState extends ConsumerState<ResultPage> {
                                 : () => _copyToClipboard(),
                             icon: const Icon(Icons.copy, size: 18),
                             label: Text(i18n.tr('result.action.copy')),
+                            style: OutlinedButton.styleFrom(
+                              disabledForegroundColor: Colors.grey[400],
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: (_isGenerating || _currentText.isEmpty)
+                                ? null
+                                : () => _shareAsCard(i18n),
+                            icon: const Icon(Icons.image_outlined, size: 18),
+                            label: Text(i18n.tr('share.card.btn')),
                             style: OutlinedButton.styleFrom(
                               disabledForegroundColor: Colors.grey[400],
                               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -489,6 +552,16 @@ class _ResultPageState extends ConsumerState<ResultPage> {
         content: Text(i18n.tr('result.copied')),
         duration: const Duration(seconds: 2),
       ),
+    );
+  }
+
+  Future<void> _shareAsCard(AppI18n i18n) async {
+    final toneKey = ref.read(selectedToneProvider);
+    final tone = ToneConfig.getByKey(toneKey);
+    await ShareCardService.shareAsCard(
+      text: _currentText,
+      sceneName: widget.scene.name,
+      toneLabel: tone.label,
     );
   }
 

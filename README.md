@@ -1,20 +1,20 @@
 # ClearTalk - 沟通助手
 
-一个帮助年轻人清晰、得体地表达诉求的工具。聚焦"不知道怎么说"的场景，通过结构化填写 + AI 生成，输出可直接使用的沟通文本。
+帮助年轻人在「不知道怎么说」的场景下，通过结构化填写 + AI 生成，输出可直接使用的沟通文本。
 
-**🌐 Web 版本**：无需安装，浏览器直接使用  
-**🔒 安全代理**：API Key 隐藏在后端，支持 Deepseek / OpenAI / Qwen
+**主交付线**：Vite 模块化 Web（`src/`）+ 后端 API（`backend/src/server.js`）  
+**可选客户端**：Flutter 跨端（`lib/`，Android / iOS / Web / 桌面）
 
 ---
 
 ## 核心功能
 
-- **13 个精选场景**：请假申请、加班调休确认、工资异议、退款申诉、外卖问题、退押金、借款催还等
-- **三步骤流程**：填写信息 → 确认缺失 → 生成文本
-- **多版本输出**：标准版 / 简短版 / 正式版 / 降火版
-- **三语气切换**：温和 / 中立 / 坚定
-- **本地存储**：历史记录浏览器本地保存，保护隐私
-- **后端代理**：API Key 不暴露，安全可控
+- **35 个内置场景**：职场、消费、租房、人际、日常、维权、教育、医疗、政务等
+- **三语气**：温和 / 中立 / 坚定
+- **后端 AI 代理**：API Key 不暴露前端，支持 Deepseek / OpenAI
+- **用户与云同步**：注册登录、多设备数据合并
+- **场景市场**：分享、热门、点赞（需后端）
+- **PWA**：离线缓存（Vite PWA 插件）
 
 ---
 
@@ -22,182 +22,134 @@
 
 ```
 APP/
-├── index.html              # 前端页面入口
-├── app.js                  # 前端业务逻辑
-├── styles.css              # 样式表
-├── backend/                # 后端代理服务
-│   ├── server.js           # Express 服务器
-│   ├── package.json        # 后端依赖
-│   ├── .env.example        # 环境变量示例
-│   └── README.md           # 后端部署文档
-├── start.bat               # Windows 一键启动脚本
-└── README.md               # 本文档
+├── src/                    # Web 前端（Vite，推荐）
+│   ├── core/               # 配置、状态、i18n、存储
+│   ├── services/           # AI、用户、同步、市场
+│   ├── scenes/             # 场景定义（由 JSON 生成）
+│   └── ui/                 # 页面与组件
+├── assets/scenes/          # 场景单源数据 builtin.json
+├── scripts/                # extract-scenes.mjs
+├── backend/                # Express API v3
+│   └── src/server.js
+├── lib/                    # Flutter 客户端
+├── legacy/                 # 已归档的旧版 Web（app.js）
+├── vercel.json             # Web 部署（输出 dist/）
+└── .github/workflows/      # CI
 ```
 
 ---
 
-## 快速开始（5 分钟跑起来）
+## 快速开始
 
-### 方式 1：一键启动（推荐 Windows 用户）
+### 1. 环境要求
 
-```bash
-# 1. 配置 API Key
-copy backend\.env.example backend\.env
-notepad backend\.env  # 填入你的 Deepseek API Key
+- Node.js >= 18
+- （可选）Flutter SDK 3.24+
 
-# 2. 双击启动
-start.bat
-```
+### 2. 配置后端
 
-### 方式 2：手动启动
-
-**步骤 1：启动后端**
 ```bash
 cd backend
-
-# 安装依赖（首次）
+copy .env.example .env   # Windows
+# 编辑 .env，填入 DEEPSEEK_API_KEY 或 OPENAI_API_KEY、JWT_SECRET
 npm install
-
-# 配置环境变量
-copy .env.example .env
-# 编辑 .env，填入 DEEPSEEK_API_KEY
-
-# 启动服务
-npm start
 ```
 
-后端启动后访问 http://localhost:3000/health 测试。
+### 3. 启动（推荐一键）
 
-**步骤 2：打开前端**
 ```bash
-# 方法 A：直接双击打开 index.html（简单）
-
-# 方法 B：使用本地服务器（推荐，避免跨域）
-npx http-server -p 8080
-# 然后访问 http://localhost:8080
+# 项目根目录
+npm install
+copy .env.example .env.local   # 可选，默认走 Vite 代理到 localhost:3000
+start.bat                      # 或: npm run dev:all
 ```
 
----
+- 前端：http://localhost:8080  
+- 后端：http://localhost:3000/health  
 
-## 获取 Deepseek API Key
+### 4. 仅启动前端 / 后端
 
-1. 访问 https://platform.deepseek.com/
-2. 注册/登录账号
-3. 进入 API Keys 页面创建新 Key
-4. 复制到 `backend/.env` 文件
-
-**费用参考**：
-- deepseek-chat: ¥1/百万 tokens
-- 一条生成约消耗 500-1000 tokens
-- 即每次成本约 ¥0.0005-0.001（非常便宜）
-
----
-
-## 安全特性
-
-| 特性 | 说明 |
-|------|------|
-| API Key 隐藏 | 前端不暴露任何 Key，通过后端代理 |
-| CORS 限制 | 只允许特定域名访问 |
-| 频率限制 | 每 IP 每 15 分钟最多 30 次请求 |
-| 输入检查 | 检测敏感信息（身份证/银行卡/手机号） |
-| 内容过滤 | 拦截恶意/违规内容 |
-| 日志记录 | 所有请求可追溯 |
-
----
-
-## 场景模板（13个）
-
-### 职场沟通
-- 请假申请、紧急请假、加班调休确认、工资/绩效异议、离职交接确认
-
-### 消费平台
-- 退款被拒申诉、货不对板/质量问题、自动续费申诉、外卖漏送/食安问题
-
-### 租房物业
-- 退押金沟通、维修推诿沟通
-
-### 人际金钱
-- 借款催还、事实说明/误会澄清
-
----
-
-## 自定义扩展
-
-### 添加新场景
-
-在 `app.js` 中的 `SCENES` 数组添加新场景：
-
-```javascript
-{
-    id: 'my_scene',
-    name: '场景名称',
-    category: '分类',
-    description: '场景描述',
-    fields: [
-        { key: 'field1', label: '字段名', type: FIELD_TYPES.TEXT, required: true },
-        // ... 更多字段
-    ]
-}
-```
-
-字段类型：`text` | `textarea` | `number` | `select` | `boolean` | `date`
-
----
-
-## 部署上线
-
-### 后端部署（Vercel 免费）
 ```bash
-cd backend
-npm i -g vercel
-vercel --prod
+npm run dev              # 仅 Vite
+npm run dev:backend      # 仅 API
 ```
 
-### 前端部署（静态托管）
-- GitHub Pages / Vercel / Netlify / Cloudflare Pages
-- 直接上传 `index.html` + `app.js` + `styles.css`
+---
 
-### 生产环境配置
-1. 修改 `backend/.env` 中的 `ALLOWED_ORIGINS` 为你的前端域名
-2. 设置 `NODE_ENV=production`
-3. 可选：提高 `RATE_LIMIT_MAX` 限制
+## 场景模板维护
+
+场景数据以 **`assets/scenes/builtin.json`** 为单源（可从 `legacy/app.js` 重新提取）：
+
+```bash
+npm run scenes:build     # 生成 src/scenes/builtin-data.js
+```
+
+修改 JSON 后执行上述命令，再提交 `builtin.json` 与 `builtin-data.js`。
 
 ---
 
-## 后续计划
+## 构建与测试
 
-- [x] Web 版本
-- [x] 后端代理
-- [x] 安全护栏
-- [x] PWA 支持（离线可用）
-- [x] 云同步与多设备数据互通
-- [x] 场景模板市场（分享/热门排行榜）
-- [ ] 更多场景模板（扩展至 30+）
-- [ ] 用户反馈收集
-- [ ] 多 AI 供应商切换
-- [ ] 语音输入
-- [ ] 截图 OCR
+```bash
+npm run build            # 输出 dist/
+npm test                 # Vitest 场景单测
+npm run lint
+```
+
+Flutter：
+
+```bash
+flutter pub get
+flutter run
+flutter build web
+```
 
 ---
 
-## 常见问题
+## 部署
 
-**Q: 为什么需要后端代理？不能直接调 Deepseek API？**  
-A: 前端直连会暴露 API Key，任何人都可以盗用。后端代理隐藏 Key，还可以加频率限制和内容过滤。
+| 组件 | 平台 | 说明 |
+|------|------|------|
+| Web | Vercel | `npm run build`，`dist/`，见 `vercel.json` |
+| API | Render | `backend/`，见 `DEPLOY.md` |
+| Flutter Web | Vercel / GH Actions | `flutter build web` → `build/web`（可选） |
 
-**Q: 可以用 OpenAI / Claude / 文心一言 吗？**  
-A: 可以，修改 `backend/server.js` 中的 `callDeepseek` 函数，换成其他 API 调用即可。
+生产环境请设置：
 
-**Q: 历史记录会同步到云端吗？**  
-A: 默认保存在浏览器本地存储（localStorage）。登录后可在设置中开启云同步，实现多设备数据互通。
+- 前端：`VITE_API_URL=https://your-api.onrender.com`
+- 后端：`ALLOWED_ORIGINS=https://your-web.vercel.app`
+
+**上市前**：`npm run launch:verify` → [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md) · [docs/LAUNCH_RUNBOOK.md](docs/LAUNCH_RUNBOOK.md)
+
+---
+
+## 场景同步命令
+
+```bash
+npm run scenes:build      # Web: JSON → src/scenes/builtin-data.js
+npm run scenes:flutter    # Flutter: JSON → lib/templates/builtin_scenes.dart
+```
+
+## 路线图
+
+- [x] Vite 模块化 Web
+- [x] 35 场景单源化（Web + Flutter 脚本同步）
+- [x] 后端 v3 API + 敏感信息脱敏
+- [x] 流式生成（SSE）+ 多模型（Deepseek / OpenAI / Qwen）
+- [x] Flutter ProxyAiService 走后端代理
+- [x] CI（Web + Backend + Flutter）
+- [x] 分享卡片（Canvas + 二维码）
+- [x] 粘贴消息 → 场景推荐
+- [x] 生成结果 👍/👎 反馈（本地 + 服务端 API）
+- [x] 健康检查 `/health/ready` 与生产启动校验
+- [x] E2E 测试（Playwright）
+- [x] 生产配置守卫（`npm run check:production`）
+- [x] SQLite + 配额 + AI 粘贴分类 + 上市 Runbook（S3–S6）
+
+详细排期见 [docs/ROADMAP.md](docs/ROADMAP.md)。
 
 ---
 
 ## 免责声明
 
-本应用生成的文本仅供参考，不构成法律意见。用户应自行核对事实准确性，并对使用后果负责。
-
----
-
-Made with ❤️ for better communication.
+生成文本仅供参考，不构成法律意见。请自行核对事实并对使用后果负责。

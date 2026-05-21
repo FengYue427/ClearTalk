@@ -39,6 +39,131 @@
   gap: var(--spacing-xs);
 }
 
+/* ========== 粘贴分析 ========== */
+.quick-paste {
+  margin: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.quick-paste-header {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: flex-start;
+  margin-bottom: var(--spacing-sm);
+}
+
+.quick-paste-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.quick-paste-title {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  margin: 0 0 4px;
+}
+
+.quick-paste-desc {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.quick-paste-input {
+  width: 100%;
+  min-height: 72px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  font-size: var(--font-size-md);
+  resize: vertical;
+  font-family: inherit;
+}
+
+.quick-paste-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.quick-paste-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+  margin-top: var(--spacing-sm);
+}
+
+.quick-paste-results {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px dashed var(--border-color);
+}
+
+.quick-paste-results.hidden {
+  display: none;
+}
+
+.quick-paste-results-title {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-sm);
+}
+
+.quick-paste-no-match {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+.quick-paste-match-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.quick-paste-match-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  background: var(--bg-secondary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.quick-paste-match-item:hover {
+  border-color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.06);
+}
+
+.quick-paste-match-item .match-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.quick-paste-match-item .match-info small {
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.match-icon {
+  font-size: 1.25rem;
+}
+
+.match-arrow {
+  color: var(--primary);
+}
+
 /* ========== 搜索栏 ========== */
 .search-bar {
   padding: var(--spacing-md);

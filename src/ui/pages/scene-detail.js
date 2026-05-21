@@ -7,7 +7,11 @@ import { Storage } from '../../core/storage.js';
 import { triggerHaptic } from '../../core/utils.js';
 import { TONES } from '../../scenes/index.js';
 import { AIService } from '../../services/ai-service.js';
-import { showToast, showLoading, createButton, createEmptyState } from '../components/index.js';
+import { shareCardImage, downloadShareCard } from '../../services/share-card.js';
+import { FeedbackService } from '../../services/feedback-service.js';
+import { Analytics } from '../../services/analytics-service.js';
+import { QuotaService } from '../../services/quota-service.js';
+import { showToast, showLoading, createButton, createEmptyState, showModal } from '../components/index.js';
 import { navigateTo } from './router.js';
 import { t } from '../../core/i18n.js';
 import { isVoiceSupported, createVoiceRecognizer, getVoiceLanguage } from '../../services/voice-service.js';
@@ -15,6 +19,7 @@ import { logger } from '../../core/logger.js';
 
 // 当前页面状态
 let currentTone = 'neutral';
+let currentVersion = 'standard';
 let isGenerating = false;
 
 function setGeneratingState(next) {
@@ -75,13 +80,24 @@ export function initSceneDetail() {
     return;
   }
   
+  Analytics.track('scene_open', { sceneId: scene.id, meta: { name: scene.name } });
+
   // 渲染场景信息
   renderSceneInfo(content, scene);
   
   // 渲染语气选择
   renderToneSelector(content);
   
-  // 渲染表单
+  if (state.formValues._pastedContext) {
+    const hint = document.createElement('div');
+    hint.className = 'paste-context-hint';
+    hint.innerHTML = `
+      <strong>${t('home.paste.context_label')}</strong>
+      <p>${escapePasteContext(state.formValues._pastedContext)}</p>
+    `;
+    content.appendChild(hint);
+  }
+
   renderForm(content, scene);
   
   // 渲染操作按钮
@@ -352,6 +368,12 @@ function renderResultArea(container) {
       <h3>${t('scene.result')}</h3>
       <span class="result-tone"></span>
     </div>
+    <div class="result-versions" id="result-versions" role="tablist" aria-label="${t('result.version.label')}">
+      <button type="button" class="version-chip active" data-version="standard">${t('result.version.standard')}</button>
+      <button type="button" class="version-chip" data-version="short">${t('result.version.short')}</button>
+      <button type="button" class="version-chip" data-version="formal">${t('result.version.formal')}</button>
+      <button type="button" class="version-chip" data-version="softened">${t('result.version.softened')}</button>
+    </div>
     <div class="result-content" id="result-content"></div>
     <div class="result-actions">
       <button class="btn btn-secondary" id="btn-copy" disabled>
@@ -371,6 +393,9 @@ function renderResultArea(container) {
         </svg>
         ${t('dialogue.share')}
       </button>
+      <button class="btn btn-secondary" id="btn-share-card" disabled title="${t('share.card.title')}">
+        🖼️ ${t('share.card.btn')}
+      </button>
       <button class="btn btn-secondary" id="btn-dialogue" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
@@ -378,12 +403,39 @@ function renderResultArea(container) {
         ${t('dialogue.title')}
       </button>
     </div>
+    <div class="feedback-section hidden" id="feedback-section">
+      <p class="feedback-prompt">${t('feedback.prompt')}</p>
+      <div class="feedback-quick">
+        <button type="button" class="btn-feedback btn-feedback-up" id="fb-helpful" aria-label="${t('feedback.helpful')}">👍 ${t('feedback.helpful')}</button>
+        <button type="button" class="btn-feedback btn-feedback-down" id="fb-not-helpful" aria-label="${t('feedback.not_helpful')}">👎 ${t('feedback.not_helpful')}</button>
+      </div>
+    </div>
+    <div class="feedback-form hidden" id="feedback-form">
+      <p class="feedback-form-title">${t('feedback.form.title')}</p>
+      <div class="feedback-reasons">
+        <label><input type="checkbox" value="inaccurate"> ${t('feedback.reason.inaccurate')}</label>
+        <label><input type="checkbox" value="tone_wrong"> ${t('feedback.reason.tone')}</label>
+        <label><input type="checkbox" value="too_long"> ${t('feedback.reason.long')}</label>
+        <label><input type="checkbox" value="too_short"> ${t('feedback.reason.short')}</label>
+        <label><input type="checkbox" value="other"> ${t('feedback.reason.other')}</label>
+      </div>
+      <textarea id="feedback-comment" class="feedback-comment" rows="2" placeholder="${t('feedback.comment.placeholder')}"></textarea>
+      <button type="button" class="btn btn-primary btn-sm" id="fb-submit-detail">${t('feedback.submit')}</button>
+    </div>
+    <p class="feedback-thanks hidden" id="feedback-thanks">${t('feedback.thanks')}</p>
   `;
   
-  // 绑定按钮事件
+  resultArea.querySelectorAll('.version-chip').forEach((chip) => {
+    chip.addEventListener('click', () => switchOutputVersion(chip.dataset.version));
+  });
+
   resultArea.querySelector('#btn-copy').addEventListener('click', copyResult);
   resultArea.querySelector('#btn-share').addEventListener('click', shareResult);
+  resultArea.querySelector('#btn-share-card').addEventListener('click', shareAsCard);
   resultArea.querySelector('#btn-dialogue').addEventListener('click', enterDialogue);
+  resultArea.querySelector('#fb-helpful').addEventListener('click', () => submitFeedback('helpful'));
+  resultArea.querySelector('#fb-not-helpful').addEventListener('click', showFeedbackForm);
+  resultArea.querySelector('#fb-submit-detail').addEventListener('click', submitDetailedFeedback);
   
   container.appendChild(resultArea);
 }
@@ -414,16 +466,38 @@ async function generateText() {
   }
 
   setGeneratingState(true);
-  const loading = showLoading(t('loading'));
-  
+  document.querySelectorAll('.version-chip').forEach((c) => { c.disabled = true; });
+  Analytics.track('generate_start', { sceneId: scene.id });
+  const tone = TONES[currentTone];
+  const useStream = AIService.shouldUseStream();
+  const loading = useStream ? null : showLoading(t('loading'));
+
   try {
-    const tone = TONES[currentTone];
-    const text = await withTimeout(
-      AIService.generate(scene, state.formValues, tone),
-      30000
-    );
-    
-    // 保存结果
+    let text = '';
+    let resultContent = document.getElementById('result-content');
+
+    if (useStream) {
+      const resultSection = document.getElementById('result-section');
+      resultContent = document.getElementById('result-content');
+      if (resultSection && resultContent) {
+        resultSection.classList.remove('hidden');
+        resultContent.textContent = '';
+        resultSection.querySelector('.result-tone').textContent = tone.label;
+      }
+
+      text = await withTimeout(
+        AIService.generateStream(scene, state.formValues, currentTone, (_chunk, full) => {
+          if (resultContent) resultContent.textContent = full;
+        }, currentVersion),
+        60000
+      );
+    } else {
+      text = await withTimeout(
+        AIService.generate(scene, state.formValues, tone, currentVersion),
+        30000
+      );
+    }
+
     state.generatedText = text;
     
     // 添加到历史
@@ -439,9 +513,14 @@ async function generateText() {
     // 显示结果
     displayResult(text, tone);
     
+    Analytics.track('generate_ok', { sceneId: scene.id, meta: { tone: currentTone, stream: useStream } });
     showToast(t('scene.success'));
   } catch (error) {
-    if (error?.message === 'timeout') {
+    Analytics.track('generate_fail', { sceneId: scene.id, meta: { message: error?.message } });
+    if (error?.message === 'QUOTA_EXCEEDED' || error?.message?.includes('次数已用完')) {
+      const q = error.quota;
+      showToast(q ? t('quota.exceeded_detail', { used: q.used, limit: q.limit }) : t('quota.exceeded'));
+    } else if (error?.message === 'timeout') {
       showToast(t('error.timeout'));
     } else if (navigator.onLine === false) {
       showToast(t('error.network'));
@@ -451,8 +530,18 @@ async function generateText() {
     console.error('Generate error:', error);
   } finally {
     setGeneratingState(false);
-    loading.close();
+    document.querySelectorAll('.version-chip').forEach((c) => { c.disabled = false; });
+    if (loading) loading.close();
   }
+}
+
+async function switchOutputVersion(version) {
+  if (!state.generatedText || version === currentVersion || isGenerating) return;
+  currentVersion = version;
+  document.querySelectorAll('.version-chip').forEach((chip) => {
+    chip.classList.toggle('active', chip.dataset.version === version);
+  });
+  await generateText();
 }
 
 // 显示结果
@@ -462,7 +551,11 @@ function displayResult(text, tone) {
   const resultTone = resultSection.querySelector('.result-tone');
 
   resultContent.textContent = text;
-  resultTone.textContent = tone.label;
+  resultTone.textContent = `${tone.label} · ${t(`result.version.${currentVersion}`)}`;
+
+  document.querySelectorAll('.version-chip').forEach((chip) => {
+    chip.classList.toggle('active', chip.dataset.version === currentVersion);
+  });
 
   resultSection.classList.remove('hidden');
 
@@ -470,12 +563,76 @@ function displayResult(text, tone) {
   const btnCopy = document.getElementById('btn-copy');
   const btnShare = document.getElementById('btn-share');
   const btnDialogue = document.getElementById('btn-dialogue');
+  const btnShareCard = document.getElementById('btn-share-card');
   if (btnCopy) btnCopy.disabled = false;
   if (btnShare) btnShare.disabled = false;
+  if (btnShareCard) btnShareCard.disabled = false;
   if (btnDialogue) btnDialogue.disabled = false;
 
-  // 滚动到结果区
+  resetFeedbackUI();
+
   resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function escapePasteContext(text) {
+  const div = document.createElement('div');
+  div.textContent = String(text).slice(0, 300);
+  return div.innerHTML;
+}
+
+function resetFeedbackUI() {
+  document.getElementById('feedback-section')?.classList.remove('hidden');
+  document.getElementById('feedback-form')?.classList.add('hidden');
+  document.getElementById('feedback-thanks')?.classList.add('hidden');
+  document.querySelectorAll('.feedback-reasons input').forEach((cb) => { cb.checked = false; });
+  const comment = document.getElementById('feedback-comment');
+  if (comment) comment.value = '';
+}
+
+function showFeedbackForm() {
+  document.getElementById('feedback-section')?.classList.add('hidden');
+  document.getElementById('feedback-form')?.classList.remove('hidden');
+}
+
+async function submitFeedback(type) {
+  const scene = state.currentScene;
+  await FeedbackService.submit({
+    type,
+    sceneId: scene?.id,
+    sceneName: scene?.name,
+    tone: currentTone,
+    textPreview: (state.generatedText || '').slice(0, 500),
+    language: state.language
+  });
+  document.getElementById('feedback-section')?.classList.add('hidden');
+  document.getElementById('feedback-form')?.classList.add('hidden');
+  document.getElementById('feedback-thanks')?.classList.remove('hidden');
+  Analytics.track('feedback_submit', { sceneId: scene?.id, meta: { type } });
+  showToast(type === 'helpful' ? t('feedback.toast.helpful') : t('feedback.toast.thanks'));
+}
+
+async function submitDetailedFeedback() {
+  const reasons = [...document.querySelectorAll('.feedback-reasons input:checked')].map((cb) => cb.value);
+  const comment = document.getElementById('feedback-comment')?.value?.trim() || '';
+  if (!reasons.length && !comment) {
+    showToast(t('feedback.form.empty'));
+    return;
+  }
+  const scene = state.currentScene;
+  await FeedbackService.submit({
+    type: 'not_helpful',
+    reasons,
+    comment,
+    sceneId: scene?.id,
+    sceneName: scene?.name,
+    tone: currentTone,
+    textPreview: (state.generatedText || '').slice(0, 500),
+    language: state.language
+  });
+  document.getElementById('feedback-form')?.classList.add('hidden');
+  document.getElementById('feedback-thanks')?.classList.remove('hidden');
+  Analytics.track('feedback_submit', { sceneId: scene?.id, meta: { type: 'not_helpful', detailed: true } });
+  showToast(t('feedback.toast.thanks'));
 }
 
 // 复制结果
@@ -487,6 +644,64 @@ async function copyResult() {
     showToast(t('dialogue.copied'));
   } catch {
     showToast(t('dialogue.copy.failed'));
+  }
+}
+
+async function shareAsCard() {
+  if (!state.generatedText) {
+    showToast(t('scene.empty.result'));
+    return;
+  }
+
+  const loading = showLoading(t('share.card.generating'));
+  try {
+    const scene = state.currentScene;
+    const tone = TONES[currentTone];
+    const { generateShareCardBlob } = await import('../../services/share-card.js');
+    const blob = await generateShareCardBlob({
+      text: state.generatedText,
+      sceneName: scene?.name,
+      toneLabel: tone?.label
+    });
+    const url = URL.createObjectURL(blob);
+    loading.close();
+
+    Analytics.track('share_card', { sceneId: scene?.id });
+
+    showModal({
+      title: t('share.card.title'),
+      content: `<div class="share-card-preview"><img src="${url}" alt="share card" style="max-width:100%;border-radius:8px"/></div>`,
+      actions: [
+        {
+          label: t('share.card.download'),
+          primary: true,
+          onClick: () => {
+            downloadShareCard({
+              text: state.generatedText,
+              sceneName: scene?.name,
+              toneLabel: tone?.label
+            });
+            URL.revokeObjectURL(url);
+          }
+        },
+        {
+          label: t('share.card.system'),
+          onClick: async () => {
+            await shareCardImage({
+              text: state.generatedText,
+              sceneName: scene?.name,
+              toneLabel: tone?.label
+            });
+            URL.revokeObjectURL(url);
+          }
+        }
+      ],
+      onOpen: () => {}
+    });
+  } catch (err) {
+    loading.close();
+    logger.error('Share card failed:', err);
+    showToast(t('share.card.failed'));
   }
 }
 

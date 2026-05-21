@@ -9,12 +9,13 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const fetch = require('node-fetch');
-const { Low } = require('lowdb');
-const { JSONFile } = require('lowdb/node');
 const nodemailer = require('nodemailer');
-const path = require('path');
-const fs = require('fs');
 const crypto = require('crypto');
+const DB = require('./database');
+const { chatCompletion, chatCompletionStream, getAiStatus } = require('./ai-provider');
+const quota = require('./quota');
+const { classifyPaste } = require('./classify-paste');
+const { loadCatalog } = require('./scene-catalog');
 require('dotenv').config();
 
 const app = express();
@@ -24,35 +25,8 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1);
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
-// ============== 数据库初始化 ==============
-const dataDir = path.join(__dirname, '../data');
-const dbPath = path.join(dataDir, 'db.json');
-
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
-const adapter = new JSONFile(dbPath);
-
-// 默认数据结构
-const defaultData = {
-  users: [],
-  userData: [],
-  scenes: [],
-  likes: [],
-  // 验证码表：邮箱验证码、重置令牌
-  verifications: [],
-  passwordResets: []
-};
-
-const db = new Low(adapter, defaultData);
-
-// 初始化数据库
-async function initDb() {
-  await db.read();
-  db.data = db.data || defaultData;
-  await db.write();
-  console.log('[DB] 数据库初始化完成');
+function ipHash(req) {
+  return crypto.createHash('sha256').update(req.ip || '').digest('hex').slice(0, 16);
 }
 
 // ============== 邮箱服务 ==============
@@ -65,7 +39,7 @@ function initEmailService() {
   const emailPass = process.env.EMAIL_PASS;
 
   if (emailHost && emailUser && emailPass) {
-    transporter = nodemailer.createTransporter({
+    transporter = nodemailer.createTransport({
       host: emailHost,
       port: parseInt(emailPort) || 587,
       secure: parseInt(emailPort) === 465,
@@ -158,6 +132,26 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/send-code', emailLimiter);
 app.use('/api/auth/forgot-password', emailLimiter);
+const feedbackLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: parseInt(process.env.FEEDBACK_RATE_LIMIT_MAX, 10) || 20,
+  message: { error: '反馈提交过于频繁，请稍后再试' }
+});
+
+const eventsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: parseInt(process.env.EVENTS_RATE_LIMIT_MAX, 10) || 60,
+  message: { error: '埋点请求过于频繁' }
+});
+
+const marketUseLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { error: '使用计数过于频繁' }
+});
+
+app.use('/api/feedback', feedbackLimiter);
+app.use('/api/events', eventsLimiter);
 app.use('/api/', apiLimiter);
 
 // JWT 认证
@@ -178,6 +172,28 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+/** 可选登录：有 token 则解析 user，无 token 也放行 */
+const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return next();
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (!err) req.user = user;
+    next();
+  });
+};
+
+const FEEDBACK_ADMIN_KEY = process.env.FEEDBACK_ADMIN_KEY || '';
+
+const requireFeedbackAdmin = (req, res, next) => {
+  const key = req.headers['x-admin-key'] || req.query.key;
+  if (!FEEDBACK_ADMIN_KEY || key !== FEEDBACK_ADMIN_KEY) {
+    return res.status(403).json({ error: '无权限访问统计数据' });
+  }
+  next();
+};
+
 // ============== 认证 API ==============
 
 // 注册
@@ -194,7 +210,7 @@ app.post('/api/auth/register', async (req, res) => {
     }
 
     // 检查是否已存在
-    const existingUser = db.data.users.find(u => u.username === username || u.email === email);
+    const existingUser = DB.findUserByUsernameOrEmail(username) || DB.findUserByUsernameOrEmail(email);
     if (existingUser) {
       return res.status(400).json({ error: '用户名或邮箱已被使用' });
     }
@@ -210,8 +226,7 @@ app.post('/api/auth/register', async (req, res) => {
       isEmailVerified: false
     };
 
-    db.data.users.push(newUser);
-    await db.write();
+    DB.createUser(newUser);
 
     const token = jwt.sign(
       { userId: newUser.id, username, email },
@@ -235,7 +250,7 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    const user = db.data.users.find(u => u.username === username || u.email === username);
+    const user = DB.findUserByUsernameOrEmail(username);
     if (!user) {
       return res.status(401).json({ error: '用户名或密码错误' });
     }
@@ -276,15 +291,13 @@ app.post('/api/auth/send-code', async (req, res) => {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10分钟过期
 
     // 保存验证码
-    db.data.verifications = db.data.verifications.filter(v => v.email !== email);
-    db.data.verifications.push({
+    DB.saveVerification({
       email,
       code,
       type,
       expiresAt,
       createdAt: new Date().toISOString()
     });
-    await db.write();
 
     // 发送邮件
     const subject = type === 'reset' ? 'ClearTalk 密码重置验证码' : 'ClearTalk 登录验证码';
@@ -322,22 +335,19 @@ app.post('/api/auth/verify-code', async (req, res) => {
     const { email, code } = req.body;
 
     // 查找验证码
-    const verification = db.data.verifications.find(
-      v => v.email === email && v.code === code && new Date(v.expiresAt) > new Date()
-    );
+    const verification = DB.findValidVerification(email, code);
 
     if (!verification) {
       return res.status(400).json({ error: '验证码错误或已过期' });
     }
 
-    // 删除已使用的验证码
-    db.data.verifications = db.data.verifications.filter(v => v.email !== email);
+    DB.deleteVerification(email);
 
-    // 查找或创建用户
-    let user = db.data.users.find(u => u.email === email);
+    let user = DB.findUserByEmail(email);
+    let isNewUser = false;
 
     if (!user) {
-      // 自动注册
+      isNewUser = true;
       user = {
         id: Date.now().toString(),
         username: email.split('@')[0],
@@ -347,13 +357,8 @@ app.post('/api/auth/verify-code', async (req, res) => {
         updatedAt: new Date().toISOString(),
         isEmailVerified: true
       };
-      db.data.users.push(user);
-    } else {
-      user.isEmailVerified = true;
-      user.updatedAt = new Date().toISOString();
+      DB.createUser(user);
     }
-
-    await db.write();
 
     const token = jwt.sign(
       { userId: user.id, username: user.username, email: user.email },
@@ -365,7 +370,7 @@ app.post('/api/auth/verify-code', async (req, res) => {
       success: true,
       token,
       user: { id: user.id, username: user.username, email: user.email, isEmailVerified: true },
-      isNewUser: !user.createdAt
+      isNewUser
     });
   } catch (error) {
     console.error('[Auth] 验证码登录失败:', error);
@@ -378,25 +383,21 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = db.data.users.find(u => u.email === email);
+    const user = DB.findUserByEmail(email);
     if (!user) {
       // 出于安全考虑，不暴露邮箱是否存在
       return res.json({ success: true, message: '如果该邮箱存在，我们已发送重置链接' });
     }
 
-    // 生成重置令牌
     const token = generateResetToken();
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1小时过期
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
-    // 保存重置令牌
-    db.data.passwordResets = db.data.passwordResets.filter(r => r.email !== email);
-    db.data.passwordResets.push({
+    DB.savePasswordReset({
       email,
       token,
       expiresAt,
       createdAt: new Date().toISOString()
     });
-    await db.write();
 
     // 发送重置邮件
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:8080'}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
@@ -430,9 +431,7 @@ app.post('/api/auth/verify-reset-token', async (req, res) => {
   try {
     const { email, token } = req.body;
 
-    const reset = db.data.passwordResets.find(
-      r => r.email === email && r.token === token && new Date(r.expiresAt) > new Date()
-    );
+    const reset = DB.findValidPasswordReset(email, token);
 
     if (!reset) {
       return res.status(400).json({ error: '重置链接已过期或无效' });
@@ -454,26 +453,19 @@ app.post('/api/auth/reset-password', async (req, res) => {
       return res.status(400).json({ error: '密码至少需要6个字符' });
     }
 
-    const reset = db.data.passwordResets.find(
-      r => r.email === email && r.token === token && new Date(r.expiresAt) > new Date()
-    );
+    const reset = DB.findValidPasswordReset(email, token);
 
     if (!reset) {
       return res.status(400).json({ error: '重置链接已过期或无效' });
     }
 
-    const user = db.data.users.find(u => u.email === email);
+    const user = DB.findUserByEmail(email);
     if (!user) {
       return res.status(404).json({ error: '用户不存在' });
     }
 
-    // 更新密码
-    user.password = await bcrypt.hash(newPassword, 10);
-    user.updatedAt = new Date().toISOString();
-
-    // 删除重置令牌
-    db.data.passwordResets = db.data.passwordResets.filter(r => r.email !== email);
-    await db.write();
+    await DB.updateUserPassword(email, await bcrypt.hash(newPassword, 10));
+    DB.deletePasswordResets(email);
 
     res.json({ success: true, message: '密码已重置，请使用新密码登录' });
   } catch (error) {
@@ -493,22 +485,17 @@ app.put('/api/user/profile', authenticateToken, async (req, res) => {
   const { username, email } = req.body;
   const userId = req.user.userId;
 
-  const user = db.data.users.find(u => u.id === userId);
+  const user = DB.findUserById(userId);
   if (!user) {
     return res.status(404).json({ error: '用户不存在' });
   }
 
-  const existing = db.data.users.find(u => 
-    u.id !== userId && (u.username === username || u.email === email)
-  );
+  const existing = DB.findUserConflict(userId, username, email);
   if (existing) {
     return res.status(400).json({ error: '用户名或邮箱已被使用' });
   }
 
-  user.username = username;
-  user.email = email;
-  user.updatedAt = new Date().toISOString();
-  await db.write();
+  DB.updateUser(userId, { username, email });
 
   res.json({ success: true, user: { id: userId, username, email } });
 });
@@ -525,24 +512,16 @@ app.post('/api/sync/upload', authenticateToken, async (req, res) => {
   for (const type of types) {
     const key = type === 'scenes' ? 'customScenes' : type;
     if (data[key]) {
-      const existing = db.data.userData.find(d => d.userId === userId && d.dataType === type);
-      if (existing) {
-        existing.data = data[key];
-        existing.updatedAt = timestamp;
-      } else {
-        db.data.userData.push({ userId, dataType: type, data: data[key], updatedAt: timestamp });
-      }
+      DB.upsertUserData(userId, type, data[key], timestamp);
     }
   }
-
-  await db.write();
   res.json({ success: true, timestamp });
 });
 
 app.get('/api/sync/download', authenticateToken, (req, res) => {
   const userId = req.user.userId;
-  const userData = db.data.userData.filter(d => d.userId === userId);
-  
+  const userData = DB.getUserData(userId);
+
   const result = {
     history: [],
     customScenes: [],
@@ -552,11 +531,11 @@ app.get('/api/sync/download', authenticateToken, (req, res) => {
     lastSync: null
   };
 
-  userData.forEach(item => {
-    const key = item.dataType === 'scenes' ? 'customScenes' : item.dataType;
-    result[key] = item.data;
-    if (!result.lastSync || new Date(item.updatedAt) > new Date(result.lastSync)) {
-      result.lastSync = item.updatedAt;
+  userData.forEach((item) => {
+    const key = item.data_type === 'scenes' ? 'customScenes' : item.data_type;
+    result[key] = JSON.parse(item.data);
+    if (!result.lastSync || new Date(item.updated_at) > new Date(result.lastSync)) {
+      result.lastSync = item.updated_at;
     }
   });
 
@@ -565,200 +544,433 @@ app.get('/api/sync/download', authenticateToken, (req, res) => {
 
 // ============== 场景市场 API ==============
 
-app.get('/api/scenes/hot', (req, res) => {
+function formatMarketList(scenes, page, limit) {
+  const p = parseInt(page, 10) || 1;
+  const l = parseInt(limit, 10) || 20;
+  return {
+    scenes,
+    total: scenes.length,
+    page: p,
+    hasMore: scenes.length >= l
+  };
+}
+
+function handleMarketList(req, res, sort) {
   const { page = 1, limit = 20 } = req.query;
-  const start = (page - 1) * limit;
-  const end = start + parseInt(limit);
+  const scenes = DB.listPublicScenes({ sort, page: parseInt(page, 10), limit: parseInt(limit, 10) });
+  res.json(formatMarketList(scenes, page, limit));
+}
 
-  const scenes = db.data.scenes
-    .filter(s => s.isPublic)
-    .sort((a, b) => (b.likes || 0) - (a.likes || 0) || (b.uses || 0) - (a.uses || 0))
-    .slice(start, end);
-
-  const users = db.data.users;
-  const formatted = scenes.map(s => {
-    const author = users.find(u => u.id === s.userId);
-    return { ...s, author: author?.username || 'Unknown' };
-  });
-
-  res.json({ scenes: formatted, page: parseInt(page), hasMore: scenes.length === parseInt(limit) });
-});
-
-app.get('/api/scenes/latest', (req, res) => {
-  const { page = 1, limit = 20 } = req.query;
-  const start = (page - 1) * limit;
-  const end = start + parseInt(limit);
-
-  const scenes = db.data.scenes
-    .filter(s => s.isPublic)
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(start, end);
-
-  const users = db.data.users;
-  const formatted = scenes.map(s => {
-    const author = users.find(u => u.id === s.userId);
-    return { ...s, author: author?.username || 'Unknown' };
-  });
-
-  res.json({ scenes: formatted, page: parseInt(page), hasMore: scenes.length === parseInt(limit) });
+app.get('/api/scenes/hot', (req, res) => handleMarketList(req, res, 'hot'));
+app.get('/api/scenes/latest', (req, res) => handleMarketList(req, res, 'latest'));
+app.get('/api/market/scenes', (req, res) => {
+  const sort = req.query.sort === 'latest' ? 'latest' : 'hot';
+  handleMarketList(req, res, sort);
 });
 
 app.get('/api/scenes/my', authenticateToken, (req, res) => {
-  const userId = req.user.userId;
-  const scenes = db.data.scenes.filter(s => s.userId === userId);
-  res.json({ scenes });
+  res.json({ scenes: DB.listScenesByUser(req.user.userId) });
+});
+app.get('/api/market/my-scenes', authenticateToken, (req, res) => {
+  res.json({ scenes: DB.listScenesByUser(req.user.userId) });
 });
 
-app.post('/api/scenes/share', authenticateToken, async (req, res) => {
+app.get('/api/market/scenes/:id', (req, res) => {
+  const scene = DB.findSceneById(req.params.id);
+  if (!scene || !scene.isPublic) {
+    return res.status(404).json({ error: '场景不存在' });
+  }
+  res.json({ scene });
+});
+
+app.get('/api/market/search', (req, res) => {
+  const { q = '', limit = 20 } = req.query;
+  if (!q || String(q).trim().length < 1) {
+    return res.json({ scenes: [], total: 0 });
+  }
+  const scenes = DB.searchScenes(String(q).trim(), parseInt(limit, 10) || 20);
+  res.json({ scenes, total: scenes.length });
+});
+
+function shareSceneHandler(req, res) {
   const { scene } = req.body;
   const userId = req.user.userId;
+
+  if (!scene?.name || !scene?.fields?.length) {
+    return res.status(400).json({ error: '场景信息不完整' });
+  }
 
   const newScene = {
     id: Date.now().toString(),
     userId,
     name: scene.name,
-    description: scene.description,
-    category: scene.category,
-    icon: scene.icon,
+    description: scene.description || '',
+    category: scene.category || '',
+    icon: scene.icon || '📝',
     fields: scene.fields,
-    likes: 0,
-    uses: 0,
     isPublic: scene.isPublic !== false,
+    status: 'approved',
     createdAt: new Date().toISOString()
   };
 
-  db.data.scenes.push(newScene);
-  await db.write();
+  DB.createScene(newScene);
+  res.json({ success: true, scene: newScene, sceneId: newScene.id });
+}
 
-  res.json({ success: true, sceneId: newScene.id });
-});
+app.post('/api/scenes/share', authenticateToken, shareSceneHandler);
+app.post('/api/market/share', authenticateToken, shareSceneHandler);
 
-app.post('/api/scenes/:id/like', authenticateToken, async (req, res) => {
+function likeSceneHandler(req, res) {
   const sceneId = req.params.id;
   const userId = req.user.userId;
+  const scene = DB.findSceneById(sceneId);
+  if (!scene) return res.status(404).json({ error: '场景不存在' });
 
-  const existingLike = db.data.likes.find(l => l.sceneId === sceneId && l.userId === userId);
-  
-  if (existingLike) {
-    return res.json({ success: true, liked: false });
-  }
+  const result = DB.toggleLike(sceneId, userId);
+  res.json({ success: true, liked: result.liked });
+}
 
-  db.data.likes.push({ sceneId, userId, createdAt: new Date().toISOString() });
-  
-  const scene = db.data.scenes.find(s => s.id === sceneId);
-  if (scene) {
-    scene.likes = (scene.likes || 0) + 1;
-  }
+app.post('/api/scenes/:id/like', authenticateToken, likeSceneHandler);
+app.post('/api/market/scenes/:id/like', authenticateToken, likeSceneHandler);
 
-  await db.write();
-  res.json({ success: true, liked: true });
-});
-
-app.delete('/api/scenes/:id', authenticateToken, async (req, res) => {
+app.delete('/api/market/scenes/:id/like', authenticateToken, (req, res) => {
   const sceneId = req.params.id;
   const userId = req.user.userId;
-
-  const sceneIndex = db.data.scenes.findIndex(s => s.id === sceneId && s.userId === userId);
-  if (sceneIndex === -1) {
-    return res.status(403).json({ error: '删除失败或无权限' });
+  if (DB.hasLiked(sceneId, userId)) {
+    DB.toggleLike(sceneId, userId);
   }
+  res.json({ success: true, liked: false });
+});
 
-  db.data.scenes.splice(sceneIndex, 1);
-  db.data.likes = db.data.likes.filter(l => l.sceneId !== sceneId);
-  await db.write();
+function useSceneHandler(req, res) {
+  const sceneId = req.params.id;
+  const scene = DB.findSceneById(sceneId);
+  if (!scene) return res.status(404).json({ error: '场景不存在' });
 
+  const key = req.user?.userId || ipHash(req);
+  const result = DB.incrementSceneUse(sceneId, key);
+  if (result.counted) {
+    DB.recordSceneUseEvent(sceneId, req.user?.userId || null, key);
+  }
+  res.json({ success: true, counted: result.counted, uses: scene.uses + (result.counted ? 1 : 0) });
+}
+
+app.post('/api/scenes/:id/use', marketUseLimiter, optionalAuth, useSceneHandler);
+app.post('/api/market/scenes/:id/use', marketUseLimiter, optionalAuth, useSceneHandler);
+
+function deleteSceneHandler(req, res) {
+  const ok = DB.deleteScene(req.params.id, req.user.userId);
+  if (!ok) return res.status(403).json({ error: '删除失败或无权限' });
   res.json({ success: true });
-});
+}
+
+app.delete('/api/scenes/:id', authenticateToken, deleteSceneHandler);
+app.delete('/api/market/my-scenes/:id', authenticateToken, deleteSceneHandler);
 
 // ============== AI 生成 API ==============
 
-app.post('/api/ai/generate', async (req, res) => {
+const SENSITIVE_PATTERNS = [
+  { pattern: /\b\d{17}[\dXx]\b/g, replacement: '[身份证号已脱敏]' },
+  { pattern: /\b\d{16,19}\b/g, replacement: '[银行卡号已脱敏]' },
+  { pattern: /\b1[3-9]\d{9}\b/g, replacement: '[手机号已脱敏]' }
+];
+
+function redactSensitiveText(text) {
+  let result = String(text);
+  for (const { pattern, replacement } of SENSITIVE_PATTERNS) {
+    result = result.replace(pattern, replacement);
+  }
+  return result;
+}
+
+app.get('/api/quota', optionalAuth, (req, res) => {
+  res.json(quota.getStatus(req));
+});
+
+app.get('/api/scenes/catalog', (req, res) => {
+  res.json({ scenes: loadCatalog() });
+});
+
+const classifyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: parseInt(process.env.CLASSIFY_RATE_LIMIT_MAX, 10) || 15,
+  message: { error: '粘贴分析过于频繁' }
+});
+
+app.post('/api/ai/classify-paste', classifyLimiter, optionalAuth, async (req, res) => {
   try {
-    const { prompt, temperature = 0.7, maxTokens = 500, model } = req.body;
+    const { text } = req.body;
+    if (!text || String(text).trim().length < 2) {
+      return res.status(400).json({ error: '请提供有效文本' });
+    }
+    const result = await classifyPaste(text);
+    res.json(result);
+  } catch (error) {
+    console.error('[Classify] 失败:', error);
+    res.status(500).json({ error: error.message || '分类失败' });
+  }
+});
+
+app.post('/api/ai/generate', optionalAuth, quota.checkQuota, async (req, res) => {
+  try {
+    const { prompt, temperature = 0.7, maxTokens = 1000, model } = req.body;
 
     if (!prompt) {
       return res.status(400).json({ error: '缺少 prompt' });
     }
 
-    const provider = model?.includes('deepseek') ? 'deepseek' : 'openai';
-    const apiKey = provider === 'deepseek'
-      ? process.env.DEEPSEEK_API_KEY
-      : process.env.OPENAI_API_KEY;
-
-    if (!apiKey) {
-      return res.status(500).json({ error: 'AI 服务未配置' });
-    }
-
-    const baseUrl = provider === 'deepseek'
-      ? 'https://api.deepseek.com/v1/chat/completions'
-      : 'https://api.openai.com/v1/chat/completions';
-
-    const modelName = model || (provider === 'deepseek' ? 'deepseek-v4-pro' : 'gpt-5.5-mini');
-
-    const response = await fetch(baseUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: modelName,
-        messages: [{ role: 'user', content: prompt }],
-        temperature,
-        max_tokens: maxTokens
-      })
+    const safePrompt = redactSensitiveText(prompt);
+    const result = await chatCompletion({
+      prompt: safePrompt,
+      temperature,
+      maxTokens,
+      model
     });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      return res.status(500).json({
-        error: error.error?.message || `AI 服务错误: ${response.status}`
-      });
-    }
-
-    const data = await response.json();
-    const text = data.choices[0].message.content;
-
-    res.json({ text, model: data.model });
+    quota.recordGeneration(req);
+    res.json({
+      text: result.text,
+      model: result.model,
+      provider: result.provider,
+      quota: quota.getStatus(req)
+    });
   } catch (error) {
     console.error('[AI] 生成失败:', error);
-    res.status(500).json({ error: 'AI 生成失败: ' + error.message });
+    res.status(500).json({ error: error.message || 'AI 生成失败' });
   }
+});
+
+app.post('/api/ai/generate-stream', optionalAuth, quota.checkQuota, async (req, res) => {
+  try {
+    const { prompt, temperature = 0.7, maxTokens = 1000, model } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({ error: '缺少 prompt' });
+    }
+
+    const safePrompt = redactSensitiveText(prompt);
+    await chatCompletionStream(
+      { prompt: safePrompt, temperature, maxTokens, model },
+      res
+    );
+    quota.recordGeneration(req);
+  } catch (error) {
+    console.error('[AI] 流式生成失败:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: error.message || '流式生成失败' });
+    }
+  }
+});
+
+// ============== 用户反馈 API ==============
+
+app.post('/api/feedback', optionalAuth, async (req, res) => {
+  try {
+    const { type, sceneId, sceneName, tone, reasons, comment, textPreview, meta } = req.body;
+
+    if (!type || !['helpful', 'not_helpful'].includes(type)) {
+      return res.status(400).json({ error: '无效的反馈类型' });
+    }
+
+    const entry = {
+      id: crypto.randomUUID(),
+      type,
+      sceneId: sceneId || null,
+      sceneName: sceneName ? String(sceneName).slice(0, 100) : null,
+      tone: tone || null,
+      reasons: Array.isArray(reasons) ? reasons.slice(0, 10) : [],
+      comment: comment ? String(comment).slice(0, 1000) : '',
+      textPreview: textPreview ? String(textPreview).slice(0, 500) : '',
+      userId: req.user?.userId || null,
+      meta: meta && typeof meta === 'object' ? meta : {},
+      ipHash: ipHash(req),
+      createdAt: new Date().toISOString()
+    };
+
+    DB.insertFeedback(entry);
+
+    res.status(201).json({ success: true, id: entry.id });
+  } catch (error) {
+    console.error('[Feedback] 保存失败:', error);
+    res.status(500).json({ error: '反馈保存失败' });
+  }
+});
+
+app.get('/api/feedback/stats', requireFeedbackAdmin, async (req, res) => {
+  const list = DB.getFeedbackStats();
+  const helpful = list.filter((f) => f.type === 'helpful').length;
+  const notHelpful = list.filter((f) => f.type === 'not_helpful').length;
+
+  const byScene = {};
+  for (const f of list) {
+    const key = f.sceneId || 'unknown';
+    byScene[key] = (byScene[key] || 0) + 1;
+  }
+
+  const topScenes = Object.entries(byScene)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([sceneId, count]) => ({
+      sceneId,
+      sceneName: list.find((f) => f.sceneId === sceneId)?.sceneName || sceneId,
+      count
+    }));
+
+  const reasonCounts = {};
+  for (const f of list) {
+    for (const r of f.reasons || []) {
+      reasonCounts[r] = (reasonCounts[r] || 0) + 1;
+    }
+  }
+
+  res.json({
+    total: list.length,
+    helpful,
+    notHelpful,
+    helpfulRate: list.length ? Math.round((helpful / list.length) * 100) : 0,
+    topScenes,
+    reasonCounts,
+    recent: list.slice(0, 20).map((f) => ({
+      id: f.id,
+      type: f.type,
+      sceneName: f.sceneName,
+      createdAt: f.createdAt
+    }))
+  });
+});
+
+// ============== 埋点 API ==============
+
+const ALLOWED_EVENTS = new Set([
+  'page_view',
+  'scene_open',
+  'generate_start',
+  'generate_ok',
+  'generate_fail',
+  'share_card',
+  'feedback_submit',
+  'market_use',
+  'paste_analyze'
+]);
+
+app.post('/api/events', optionalAuth, (req, res) => {
+  try {
+    const { name, sceneId, meta } = req.body;
+    if (!name || !ALLOWED_EVENTS.has(name)) {
+      return res.status(400).json({ error: '无效的事件名称' });
+    }
+
+    const entry = {
+      id: crypto.randomUUID(),
+      name,
+      sceneId: sceneId || null,
+      userId: req.user?.userId || null,
+      meta: meta && typeof meta === 'object' ? meta : {},
+      ipHash: ipHash(req),
+      createdAt: new Date().toISOString()
+    };
+
+    DB.insertEvent(entry);
+    res.status(201).json({ success: true, id: entry.id });
+  } catch (error) {
+    console.error('[Events] 保存失败:', error);
+    res.status(500).json({ error: '事件保存失败' });
+  }
+});
+
+app.get('/api/events/stats', requireFeedbackAdmin, (req, res) => {
+  const days = parseInt(req.query.days, 10) || 7;
+  const stats = DB.getEventStats(days);
+  const dbStats = DB.getStats();
+  res.json({ ...stats, totals: dbStats });
 });
 
 // ============== 健康检查 ==============
 
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
+function getHealthPayload() {
+  const ai = getAiStatus();
+  const isProd = process.env.NODE_ENV === 'production';
+  const jwtOk = JWT_SECRET && JWT_SECRET !== 'your-secret-key-change-in-production';
+
+  const warnings = [];
+  if (isProd && !jwtOk) warnings.push('JWT_SECRET 未正确配置');
+  if (isProd && !ai.ready) warnings.push('未配置任何 AI API Key');
+  if (isProd && allowedOrigins.length === 0) warnings.push('ALLOWED_ORIGINS 为空');
+
+  return {
+    status: warnings.length && isProd ? 'degraded' : 'ok',
     service: 'cleartalk-api',
-    version: '3.0.0',
+    version: '3.1.0',
     timestamp: new Date().toISOString(),
-    features: ['auth', 'email', 'reset-password', 'sync', 'market', 'ai']
-  });
+    environment: process.env.NODE_ENV || 'development',
+    checks: {
+      database: DB.getMode?.() || 'sqlite',
+      email: !!transporter,
+      ai,
+      jwt: jwtOk,
+      corsOrigins: allowedOrigins.length
+    },
+    warnings,
+    features: ['auth', 'email', 'reset-password', 'sync', 'market', 'ai', 'ai-stream', 'feedback', 'events', 'sqlite', 'quota', 'classify-paste']
+  };
+}
+
+app.get('/health', (req, res) => {
+  res.json(getHealthPayload());
+});
+
+app.get('/health/ready', (req, res) => {
+  const payload = getHealthPayload();
+  const ai = getAiStatus();
+  if (process.env.NODE_ENV === 'production' && !ai.ready) {
+    return res.status(503).json({ ...payload, status: 'unavailable' });
+  }
+  res.json(payload);
 });
 
 // ============== 启动 ==============
 
-async function start() {
-  await initDb();
+function validateStartup() {
+  const isProd = process.env.NODE_ENV === 'production';
+  const ai = getAiStatus();
+
+  if (isProd) {
+    if (JWT_SECRET === 'your-secret-key-change-in-production') {
+      console.error('[Startup] 生产环境必须设置 JWT_SECRET');
+      process.exit(1);
+    }
+    if (!ai.ready) {
+      console.warn('[Startup] 警告: 未配置 AI Key，生成功能将不可用');
+    }
+    if (allowedOrigins.length === 0) {
+      console.warn('[Startup] 警告: ALLOWED_ORIGINS 未配置');
+    }
+  }
+
+  console.log(`[Startup] AI 已配置: ${ai.configured.join(', ') || '无'}`);
+}
+
+function start() {
+  DB.init();
   initEmailService();
-  
+  validateStartup();
+
   app.listen(PORT, () => {
+    const ai = getAiStatus();
+    const stats = DB.getStats();
     console.log(`
 ╔════════════════════════════════════════╗
-║     ClearTalk API Server v3.0.0        ║
+║     ClearTalk API Server v3.2.0        ║
 ╠════════════════════════════════════════╣
 ║  Port: ${PORT}                            ║
-║  Database: LowDB (JSON)                  ║
+║  Database: ${(DB.getMode?.() || 'sqlite').padEnd(28)}║
+║  Users: ${stats.users}  Scenes: ${stats.scenes}              ║
 ║  Email: ${transporter ? 'Enabled' : 'Simulated'}                ║
+║  AI: ${ai.configured.join(', ') || 'none'}                       ║
 ╠════════════════════════════════════════╣
 ║  Features:                               ║
-║    ✓ Auth (Password + Email Code)        ║
-║    ✓ Password Reset                      ║
-║    ✓ Cloud Sync                          ║
-║    ✓ Scene Market                        ║
-║    ✓ AI Proxy                            ║
+║    ✓ Auth / Sync / Market / AI Stream    ║
+║    ✓ Feedback / Events / SQLite          ║
 ╚════════════════════════════════════════╝
     `);
   });

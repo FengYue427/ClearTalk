@@ -13,13 +13,20 @@
    - **Start Command**: `npm start`
 5. 添加环境变量：
    ```
+   NODE_ENV=production
    JWT_SECRET=your-random-secret-key
-   DEEPSEEK_API_KEY=your-deepseek-key (可选)
+   DEEPSEEK_API_KEY=your-deepseek-key
    OPENAI_API_KEY=your-openai-key (可选)
+   QWEN_API_KEY=your-qwen-key (可选)
    ALLOWED_ORIGINS=https://your-frontend.vercel.app
+   FEEDBACK_ADMIN_KEY=random-admin-key-for-stats
+   SQLITE_PATH=/opt/render/project/src/data/cleartalk.db
+   FREE_DAILY_GENERATIONS=20
+   PRO_DAILY_GENERATIONS=200
    ```
-6. 点击 **Create Web Service**
-7. 记录分配的域名：`https://cleartalk-api.onrender.com`
+6. **健康检查路径**（Render Health Check Path）：`/health/ready`
+7. 点击 **Create Web Service**
+8. 记录分配的域名：`https://cleartalk-api.onrender.com`
 
 ### 2. 部署前端（Vercel - 免费）
 
@@ -58,11 +65,35 @@ cleartalk/
 │   └── ...
 ├── backend/                # 后端源码
 │   ├── src/server.js      # 主服务器
-│   ├── data/              # SQLite 数据库
+│   ├── data/              # cleartalk.db（SQLite）或 db.json（回退）
 │   └── package.json
 ├── vercel.json            # Vercel 配置
 ├── DEPLOY.md              # 本文件
 └── README.md
+```
+
+---
+
+## 🚀 上市前预检
+
+```bash
+npm run launch:verify
+```
+
+详见 `docs/LAUNCH_CHECKLIST.md` 与 `docs/LAUNCH_RUNBOOK.md`。运营看板：部署后访问 `/admin.html`。
+
+## 🧪 测试
+
+```bash
+# 单元测试
+npm test
+
+# E2E（需先 build，自动启动 preview）
+npm run build
+npm run test:e2e
+
+# 生产配置守卫（CI 同款）
+npm run check:production
 ```
 
 ---
@@ -128,7 +159,33 @@ ALLOWED_ORIGINS=http://localhost:8080
 - `DELETE /api/scenes/:id` - 删除场景
 
 ### AI 生成
-- `POST /api/ai/generate` - AI 文本生成
+- `POST /api/ai/generate` - AI 文本生成（计配额）
+- `POST /api/ai/generate-stream` - SSE 流式生成（计配额）
+- `POST /api/ai/classify-paste` - 粘贴场景分类
+
+### 配额
+- `GET /api/quota` - 今日剩余次数（可选登录）
+
+### 埋点
+- `POST /api/events` - 行为埋点
+- `GET /api/events/stats` - 统计（`X-Admin-Key`）
+
+### 反馈
+- `POST /api/feedback` - 提交用户反馈（可选登录）
+- `GET /api/feedback/stats` - 统计（需请求头 `X-Admin-Key: FEEDBACK_ADMIN_KEY`）
+
+### 健康检查
+- `GET /health` - 服务状态与配置检查
+- `GET /health/ready` - 就绪探活（生产未配置 AI Key 时 503）
+
+---
+
+## 线上主站说明
+
+| 产物 | 部署目标 | 说明 |
+|------|----------|------|
+| **Vite `dist/`** | Vercel（推荐） | 主 Web 应用，`vercel.json` 已配置 |
+| Flutter `build/web` | 可选 | `.github/workflows/deploy-web.yml`，与主站二选一 |
 
 ---
 

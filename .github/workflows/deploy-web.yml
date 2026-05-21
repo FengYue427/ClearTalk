@@ -1,0 +1,13 @@
+# 已停用：主站使用 Vite（vercel.json），勿用 Flutter Web 部署同一 Vercel 项目。
+# 如需 Flutter Web，请单独建 Vercel 项目或仅手动运行本 workflow。
+name: Flutter Web to Vercel (manual only)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    if: false
+    steps:
+      - run: echo "Disabled. Use root vercel.json + npm run build for production."
