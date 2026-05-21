@@ -2,7 +2,7 @@
   "version": 2,
   "name": "cleartalk",
   "installCommand": "npm ci && npm run scenes:build",
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run vercel-build",
   "outputDirectory": "dist",
   "framework": "vite",
   "routes": [
