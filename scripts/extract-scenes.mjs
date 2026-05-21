@@ -56,6 +56,8 @@ const CATEGORY_ICONS = {
 normalized = SCENES.map((scene) => ({
   id: scene.id,
   name: scene.name,
+  translationKey: `scene.${scene.id}.name`,
+  descriptionKey: `scene.${scene.id}.desc`,
   category: scene.category,
   description: scene.description,
   icon: CATEGORY_ICONS[scene.category] || '📝',

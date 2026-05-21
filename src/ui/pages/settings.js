@@ -84,29 +84,6 @@ function getSettingsGroups() {
     ]
   },
   {
-    title: t('settings.section.about'),
-    items: [
-      {
-        key: 'export',
-        label: t('user.export.data'),
-        type: 'action',
-        action: exportAllData
-      },
-      {
-        key: 'clearHistory',
-        label: t('history.clear.all'),
-        type: 'danger',
-        action: clearHistory
-      },
-      {
-        key: 'clearAll',
-        label: t('settings.delete.account'),
-        type: 'danger',
-        action: resetAllData
-      }
-    ]
-  },
-  {
     title: t('settings.section.ai'),
     items: [
       {
@@ -171,6 +148,24 @@ function getSettingsGroups() {
   {
     title: t('settings.section.about'),
     items: [
+      {
+        key: 'export',
+        label: t('user.export.data'),
+        type: 'action',
+        action: exportAllData
+      },
+      {
+        key: 'clearHistory',
+        label: t('history.clear.all'),
+        type: 'danger',
+        action: clearHistory
+      },
+      {
+        key: 'clearAll',
+        label: t('settings.delete.account'),
+        type: 'danger',
+        action: resetAllData
+      },
       {
         key: 'version',
         label: t('settings.version'),
@@ -341,8 +336,12 @@ function renderGroup(container, group) {
         });
         
         select.addEventListener('change', (e) => {
-          handleSettingChange(item.key, e.target.value);
-          // 如果是服务商切换，刷新页面更新模型选项
+          const value = e.target.value;
+          if (item.onChange) {
+            item.onChange(value);
+          } else {
+            handleSettingChange(item.key, value);
+          }
           if (item.key === 'aiProvider') {
             setTimeout(() => initSettings(), 100);
           }
@@ -448,22 +447,23 @@ function handleSettingChange(key, value) {
       state.theme = value;
       break;
     case 'language':
-      state.language = value;
-      break;
+      setLanguage(value);
+      return;
     case 'haptic':
       state.haptic = value;
       break;
     case 'autoSync':
       SyncService.setAutoSync(value);
       break;
+    default:
+      break;
   }
-  
-  // 持久化
-  const settings = Storage.get('cleartalk_settings', {});
-  settings[key] = value;
-  Storage.set('cleartalk_settings', settings);
-  
-  showToast(t('toast.saved'));
+
+  Storage.setSetting(key, value);
+
+  if (key !== 'language') {
+    showToast(t('toast.saved'));
+  }
 }
 
 // 显示同步方向选择
@@ -473,7 +473,7 @@ function showSyncDirectionSelect() {
   showActionSheet({
     title: t('settings.sync.direction'),
     actions: [
-      { label: t('settings.sync.merge') + ' (Recommended)', value: 'merge', checked: current === 'merge' },
+      { label: `${t('settings.sync.merge')} (${t('common.recommended')})`, value: 'merge', checked: current === 'merge' },
       { label: t('settings.sync.upload'), value: 'upload', checked: current === 'upload' },
       { label: t('settings.sync.download'), value: 'download', checked: current === 'download' }
     ],

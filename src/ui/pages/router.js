@@ -14,6 +14,8 @@ import { initDialogue } from './dialogue.js';
 import { initSettings } from './settings.js';
 import { Seo } from '../../services/seo-service.js';
 import { getSceneById } from '../../scenes/index.js';
+import { t } from '../../core/i18n.js';
+import { getSceneName } from '../../scenes/scene-l10n.js';
 
 // 页面配置
 const PAGES = {
@@ -170,17 +172,20 @@ export function getCurrentPage() {
 
 // 更新页面标题
 function updatePageTitle(page) {
+  const suffix = ` - ${t('app.name')}`;
   const titles = {
-    'home': 'ClearTalk - 沟通助手',
-    'scene-detail': state.currentScene ? `${state.currentScene.name} - ClearTalk` : '场景详情 - ClearTalk',
-    'market': '场景市场 - ClearTalk',
-    'user': '用户中心 - ClearTalk',
-    'history': '历史记录 - ClearTalk',
-    'dialogue': '对话模拟 - ClearTalk',
-    'settings': '设置 - ClearTalk'
+    home: `${t('home.title')}${suffix}`,
+    'scene-detail': state.currentScene
+      ? `${getSceneName(state.currentScene)}${suffix}`
+      : `${t('scene.detail.title')}${suffix}`,
+    market: `${t('market.title')}${suffix}`,
+    user: `${t('user.title')}${suffix}`,
+    history: `${t('history.title')}${suffix}`,
+    dialogue: `${t('dialogue.title')}${suffix}`,
+    settings: `${t('settings.title')}${suffix}`
   };
-  
-  document.title = titles[page] || 'ClearTalk';
+
+  document.title = titles[page] || t('app.name');
   Seo.updateForPage(page);
 }
 

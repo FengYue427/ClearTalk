@@ -8,6 +8,7 @@ import { formatDate, escapeHtml, copyToClipboard, downloadFile, events } from '.
 import { showToast, showConfirm, showActionSheet, createEmptyState } from '../components/index.js';
 import { navigateTo } from './router.js';
 import { t } from '../../core/i18n.js';
+import { getSceneName } from '../../scenes/scene-l10n.js';
 import { BUILTIN_SCENES } from '../../scenes/index.js';
 
 // 语言变化取消订阅函数
@@ -198,7 +199,7 @@ export function renderHistoryList() {
 function createHistoryItem(item) {
   const text = escapeHtml(item.text || '').substring(0, 100);
   const date = formatDate(item.createdAt);
-  const sceneName = escapeHtml(getSceneName(item.sceneId, item.sceneName));
+  const sceneName = escapeHtml(resolveHistorySceneName(item.sceneId, item.sceneName));
   const toneLabel = getToneLabel(item.tone);
   
   return `
@@ -229,10 +230,10 @@ function createHistoryItem(item) {
   `;
 }
 
-// 获取场景名称（支持翻译）
-function getSceneName(sceneId, fallbackName) {
-  const scene = BUILTIN_SCENES.find(s => s.id === sceneId);
-  return scene?.translationKey ? t(scene.translationKey) : (fallbackName || 'Unknown');
+function resolveHistorySceneName(sceneId, fallbackName) {
+  const scene = BUILTIN_SCENES.find((s) => s.id === sceneId);
+  if (scene) return getSceneName(scene);
+  return fallbackName || t('common.unknown');
 }
 
 // 获取语气标签

@@ -220,8 +220,7 @@ function registerGlobalComponents() {
 // 订阅状态变化
 subscribe('language', (newLang) => {
   applyLanguage();
-  // 触发语言切换事件
-  events.emit('language:change', newLang);
+  events.emit('language:changed', newLang);
 });
 
 subscribe('theme', (newTheme) => {

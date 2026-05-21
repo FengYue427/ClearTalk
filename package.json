@@ -9,7 +9,7 @@
     "dev:all": "concurrently -k -n backend,web -c blue,green \"npm run dev:backend\" \"npm run dev\"",
     "build": "vite build",
     "preview": "vite preview",
-    "scenes:build": "node scripts/extract-scenes.mjs --from-json",
+    "scenes:build": "node scripts/extract-scenes.mjs --from-json && node scripts/sync-scene-i18n.mjs",
     "scenes:flutter": "node scripts/build-flutter-scenes.mjs",
     "sitemap": "node scripts/generate-sitemap.mjs",
     "test": "vitest run",

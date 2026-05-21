@@ -6,6 +6,7 @@
 import { state } from './state.js';
 import { Storage } from './storage.js';
 import { events } from './utils.js';
+import { SCENE_TRANSLATIONS } from './scene-translations.generated.js';
 
 // 翻译字典 - 完整覆盖所有UI文本
 const translations = {
@@ -100,6 +101,13 @@ const translations = {
     // 首页
     'home.title': '选择场景',
     'home.search.placeholder': '搜索场景...',
+    'home.search.empty': '未找到匹配场景',
+    'home.search.empty.hint': '试试其他关键词',
+    'home.empty.market.hint': '去场景市场发现更多模板',
+    'scene.detail.title': '场景详情',
+    'scene.not.selected': '未选择场景',
+    'scene.not.found': '场景不存在',
+    'common.unknown': '未知场景',
     'home.paste.title': '收到难回复的消息？',
     'home.paste.desc': '粘贴对方发来的内容，自动推荐合适场景',
     'home.paste.placeholder': '粘贴微信/短信/邮件中的消息…',
@@ -732,6 +740,13 @@ const translations = {
     // Home
     'home.title': 'Choose Scene',
     'home.search.placeholder': 'Search scenes...',
+    'home.search.empty': 'No matching scenes',
+    'home.search.empty.hint': 'Try different keywords',
+    'home.empty.market.hint': 'Discover more templates in the market',
+    'scene.detail.title': 'Scene',
+    'scene.not.selected': 'No scene selected',
+    'scene.not.found': 'Scene not found',
+    'common.unknown': 'Unknown scene',
     'home.paste.title': 'Hard to reply to a message?',
     'home.paste.desc': 'Paste what they sent — we suggest matching scenarios',
     'home.paste.placeholder': 'Paste from WeChat, SMS, email…',
@@ -1312,6 +1327,10 @@ function updatePageTranslations() {
     }
   });
 }
+
+// 合并 Flutter 对齐的场景翻译
+Object.assign(translations.zh, SCENE_TRANSLATIONS.zh);
+Object.assign(translations.en, SCENE_TRANSLATIONS.en);
 
 // 初始化语言设置
 export function initI18n() {

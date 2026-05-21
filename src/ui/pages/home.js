@@ -12,6 +12,7 @@ import { createSceneCard, createEmptyState, showToast } from '../components/inde
 import { initSceneDetail } from './scene-detail.js';
 import { navigateTo } from './router.js';
 import { t } from '../../core/i18n.js';
+import { getSceneName } from '../../scenes/scene-l10n.js';
 
 // 语言变化取消订阅函数
 let homeLanguageUnsubscribe = null;
@@ -114,7 +115,7 @@ function renderHeader(container) {
   const header = document.createElement('header');
   header.className = 'header';
   header.innerHTML = `
-    <h1>ClearTalk</h1>
+    <h1>${t('app.name')}</h1>
     <div class="header-actions">
       <button class="btn-icon" id="btn-market" title="${t('nav.market')}">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -233,7 +234,7 @@ async function analyzePaste(text, resultsEl) {
     btn.innerHTML = `
       <span class="match-icon">${scene.icon || '📝'}</span>
       <span class="match-info">
-        <strong>${scene.name}</strong>
+        <strong>${getSceneName(scene)}</strong>
         <small>${scene.category}${matchedKeywords.length ? ' · ' + matchedKeywords.slice(0, 2).join('、') : ''}</small>
       </span>
       <span class="match-arrow">→</span>
@@ -242,7 +243,7 @@ async function analyzePaste(text, resultsEl) {
       state.currentScene = scene;
       state.formValues = { _pastedContext: trimmed };
       navigateTo('scene-detail');
-      showToast(t('home.paste.opened', { name: scene.name }));
+      showToast(t('home.paste.opened', { name: getSceneName(scene) }));
     });
     list.appendChild(btn);
   });
@@ -372,8 +373,8 @@ export function renderSceneList() {
   if (scenes.length === 0) {
     const empty = createEmptyState({
       icon: searchQuery ? '🔍' : '📭',
-      title: searchQuery ? 'No matching scenes' : t('empty'),
-      description: searchQuery ? 'Try other keywords' : 'Discover more in market',
+      title: searchQuery ? t('home.search.empty') : t('empty'),
+      description: searchQuery ? t('home.search.empty.hint') : t('home.empty.market.hint'),
       action: searchQuery ? null : {
         text: t('nav.market'),
         onClick: () => navigateTo('market')

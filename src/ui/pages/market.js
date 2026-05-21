@@ -10,6 +10,7 @@ import { triggerHaptic, isOnline, events } from '../../core/utils.js';
 import { showToast, showLoading, showConfirm, createEmptyState, createSceneCard } from '../components/index.js';
 import { navigateTo } from './router.js';
 import { t } from '../../core/i18n.js';
+import { getSceneName } from '../../scenes/scene-l10n.js';
 import { CATEGORIES } from '../../scenes/index.js';
 
 // 语言变化取消订阅函数
@@ -299,7 +300,7 @@ function createMarketCard(scene) {
         <div class="card-header">
           <div class="card-icon">${scene.icon || '📝'}</div>
           <div class="card-title">
-            <h4>${escapeHtml(scene.translationKey ? t(scene.translationKey) : scene.name)}</h4>
+            <h4>${escapeHtml(getSceneName(scene))}</h4>
             <span class="card-category">${escapeHtml(getCategoryName(scene.category))}</span>
           </div>
         </div>

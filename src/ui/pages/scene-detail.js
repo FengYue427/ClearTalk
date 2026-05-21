@@ -14,6 +14,7 @@ import { QuotaService } from '../../services/quota-service.js';
 import { showToast, showLoading, createButton, createEmptyState, showModal } from '../components/index.js';
 import { navigateTo } from './router.js';
 import { t } from '../../core/i18n.js';
+import { getSceneName, getSceneDescription, getFieldLabel, getFieldPlaceholder, getSelectOptionLabel } from '../../scenes/scene-l10n.js';
 import { isVoiceSupported, createVoiceRecognizer, getVoiceLanguage } from '../../services/voice-service.js';
 import { logger } from '../../core/logger.js';
 
@@ -69,8 +70,8 @@ export function initSceneDetail() {
     // 没有选中场景，显示空状态
     const empty = createEmptyState({
       icon: '🤔',
-      title: 'No scene selected',
-      description: 'Please select a scene first',
+      title: t('scene.not.selected'),
+      description: t('home.title'),
       action: {
         text: t('nav.back'),
         onClick: () => navigateTo('home')
@@ -119,7 +120,7 @@ function renderHeader(container) {
         <path d="M19 12H5M12 19l-7-7 7-7"/>
       </svg>
     </button>
-    <h2>${scene ? (scene.translationKey ? t(scene.translationKey) : scene.name) : t('home.categories.all')}</h2>
+    <h2>${scene ? getSceneName(scene) : t('scene.detail.title')}</h2>
     <div class="header-actions">
       <button class="btn-icon" id="btn-favorite" title="${t('history.favorite')}">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -150,8 +151,8 @@ function renderSceneInfo(container, scene) {
   info.innerHTML = `
     <div class="scene-icon-large">${scene.icon || '📝'}</div>
     <div class="scene-meta">
-      <h1 class="scene-header-title">${scene ? t(scene.translationKey) : t('scene.not.found')}</h1>
-      <p class="scene-header-desc">${scene ? t(scene.descriptionKey) : ''}</p>
+      <h1 class="scene-header-title">${scene ? getSceneName(scene) : t('scene.not.found')}</h1>
+      <p class="scene-header-desc">${scene ? getSceneDescription(scene) : ''}</p>
     </div>
   `;
   container.appendChild(info);
@@ -207,9 +208,8 @@ function createFormField(field) {
   const label = document.createElement('label');
   label.className = 'field-label';
   // Dynamic translation key: scene.field.{sceneId}.{fieldKey}
-  const sceneId = state.currentScene?.id || 'generic';
-  const dynamicKey = `scene.field.${sceneId}.${field.key}`;
-  const labelText = t(dynamicKey) !== dynamicKey ? t(dynamicKey) : (field.translationKey ? t(field.translationKey) : field.label);
+  const sceneId = state.currentScene?.id;
+  const labelText = getFieldLabel(field, sceneId);
   label.innerHTML = `
     ${labelText}
     ${field.required ? '<span class="required">*</span>' : ''}
@@ -227,7 +227,7 @@ function createFormField(field) {
       field.options?.forEach(opt => {
         const option = document.createElement('option');
         option.value = opt.value || opt;
-        option.textContent = opt.label || opt;
+        option.textContent = getSelectOptionLabel(field, opt, sceneId);
         input.appendChild(option);
       });
       break;
@@ -243,9 +243,7 @@ function createFormField(field) {
   
   input.className = 'field-input';
   // Dynamic placeholder key: scene.field.{sceneId}.{fieldKey}.placeholder
-  const dynamicPlaceholderKey = `scene.field.${sceneId}.${field.key}.placeholder`;
-  const placeholderText = t(dynamicPlaceholderKey) !== dynamicPlaceholderKey ? t(dynamicPlaceholderKey) : (field.placeholderKey ? t(field.placeholderKey) : field.placeholder);
-  input.placeholder = placeholderText || '';
+  input.placeholder = getFieldPlaceholder(field, sceneId) || '';
   input.dataset.key = field.key;
   input.required = field.required;
 

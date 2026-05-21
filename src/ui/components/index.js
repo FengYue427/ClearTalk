@@ -5,6 +5,7 @@
 import { escapeHtml, triggerHaptic } from '../../core/utils.js';
 import { state } from '../../core/state.js';
 import { t } from '../../core/i18n.js';
+import { getSceneName, getSceneDescription } from '../../scenes/scene-l10n.js';
 import { CATEGORIES } from '../../scenes/index.js';
 
 // Toast 提示
@@ -294,8 +295,8 @@ export function createSceneCard(scene, onClick) {
   card.className = 'scene-card';
   card.dataset.id = scene.id;
   
-  const sceneName = scene.translationKey ? t(scene.translationKey) : escapeHtml(scene.name);
-  const sceneDesc = scene.descriptionKey ? t(scene.descriptionKey) : escapeHtml(scene.description);
+  const sceneName = escapeHtml(getSceneName(scene));
+  const sceneDesc = escapeHtml(getSceneDescription(scene));
   const categoryKey = scene.category;
   const categoryI18nKey = CATEGORIES.find((c) => c.id === categoryKey)?.translationKey;
   const sceneCategory = categoryI18nKey ? t(categoryI18nKey) : escapeHtml(categoryKey);
