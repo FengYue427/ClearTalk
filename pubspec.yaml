@@ -35,9 +35,8 @@ dependencies:
 
   crypto: ^3.0.3
 
-  # Date formatting
-  intl: ^0.20.2
-  
+  # intl：由 flutter_localizations 按 SDK 锁定版本，勿在 pubspec 写死（避免 CI 3.24 / 本地新 SDK 冲突）
+
   # UI components
   flutter_animate: ^4.3.0
   
