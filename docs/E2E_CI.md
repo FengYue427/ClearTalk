@@ -22,6 +22,16 @@ CI=true npm run test:e2e
 
 本地 `5 passed` 即 CI 配置正确；若 GitHub 仍红，看 Actions 日志里 **webServer** 是否 `vite preview` 启动失败。
 
+## launch-verify：`vite: Permission denied`
+
+**原因**：CI job 未执行 `npm ci`，或 `node_modules/.bin/vite` 无执行权限。
+
+**修复**（本仓库已做）：
+
+- `.github/workflows/ci.yml` 的 `launch-verify` 在预检前增加 `npm ci`
+- `package.json` 使用 `npx vite build` / `npx vitest run`
+- `launch-verify.mjs` 在缺少 `node_modules/vite` 时自动 `npm ci`
+
 ## 其它项目（如 ai-ide 截图）
 
 若日志路径为 `ai-ide/e2e/helpers.ts` 且 **没有** `webServer` 或 CI **未先 build + preview**，需任选其一：

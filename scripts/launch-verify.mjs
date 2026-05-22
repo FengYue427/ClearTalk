@@ -37,6 +37,16 @@ function checkFile(rel) {
 
 console.log('\n[launch:verify] ClearTalk 上市预检\n');
 
+if (!fs.existsSync(path.join(root, 'node_modules', 'vite'))) {
+  console.log('安装依赖 (npm ci)…');
+  const ci = run('npm', ['ci']);
+  if (ci.status !== 0) {
+    console.error(ci.stderr || ci.stdout);
+    fail('npm ci 失败，请先在本机或 CI 中安装依赖');
+  }
+  ok('npm ci');
+}
+
 // 1. 关键文件
 console.log('1. 静态与配置');
 [
