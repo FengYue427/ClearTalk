@@ -39,7 +39,8 @@
 | 邮箱 | 生产配置 `EMAIL_*`；否则 API **模拟模式**会在响应中返回验证码（仅适合内测） |
 | 法务 | `privacy.html` / `terms.html` 建议法务终审 |
 
-拓展规划见 [`docs/POST_LAUNCH_ROADMAP.md`](POST_LAUNCH_ROADMAP.md)。
+拓展规划见 [`docs/POST_LAUNCH_ROADMAP.md`](POST_LAUNCH_ROADMAP.md)。  
+**S7 上市对齐执行计划**：[`docs/PLAN_S7_LAUNCH_ALIGNMENT.md`](PLAN_S7_LAUNCH_ALIGNMENT.md)
 
 ---
 

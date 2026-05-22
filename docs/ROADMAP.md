@@ -20,6 +20,20 @@
 | 7（S5） | 配额/Pro 预备、AI 粘贴分类、场景落地页、合规页、Flutter 分享卡片 |
 | 8（S6） | 上市清单同步、Runbook、launch:verify、Admin 看板、注册合规链 |
 | 8b | 第二轮审查：场景 i18n 同步、设置语言修复、UI 硬编码清理 |
+| 8c | Vercel Vite 部署修复（`vercel-build`）、上市文档与签收单 |
+
+---
+
+## 阶段 8c：部署稳定（进行中 → 你方已确认 Vercel Ready）
+
+| 任务 | 状态 |
+|------|------|
+| 去掉 Flutter Web 生产构建 | ✅ |
+| `vercel-build` + `VERCEL_FIX.md` | ✅ |
+| Vercel 生产 Ready | ✅（你方确认） |
+| Render API 上线 | 🚀 S7 重点 |
+
+**执行计划**：见 [`docs/PLAN_S7_LAUNCH_ALIGNMENT.md`](PLAN_S7_LAUNCH_ALIGNMENT.md)
 
 ---
 

@@ -1,6 +1,6 @@
 # ClearTalk 上市后拓展与优化路线图
 
-> 基线：S6 上市准备 + 第二轮审查（i18n/设置修复，`165a0a0e`）  
+> 基线：S8c Vercel Ready（`985a2219`）+ S7 对齐计划见 [`PLAN_S7_LAUNCH_ALIGNMENT.md`](PLAN_S7_LAUNCH_ALIGNMENT.md)  
 > 主站：Vite Web · API：Render · 场景：35
 
 ---
