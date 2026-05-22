@@ -12,6 +12,7 @@ import 'input_page.dart';
 import 'history_page.dart';
 import 'user_page.dart';
 import '../services/paste_classify_service.dart';
+import '../services/scene_matcher.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -33,7 +34,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.dispose();
   }
 
-  void _analyzePaste() {
+  Future<void> _analyzePaste() async {
     final i18n = AppI18n.of(context);
     final text = _pasteController.text.trim();
     if (text.isEmpty) {

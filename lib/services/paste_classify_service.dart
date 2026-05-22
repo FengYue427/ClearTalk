@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/scene_template.dart';
 import '../templates/builtin_scenes.dart';
 import 'proxy_ai_service.dart';
 import 'scene_matcher.dart';

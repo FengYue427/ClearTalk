@@ -35,7 +35,8 @@ dependencies:
 
   crypto: ^3.0.3
 
-  # intl：由 flutter_localizations 按 SDK 锁定版本，勿在 pubspec 写死（避免 CI 3.24 / 本地新 SDK 冲突）
+  # 与 SDK 一致；勿写死 0.19/0.20（history_page 直接 import）
+  intl: any
 
   # UI components
   flutter_animate: ^4.3.0
@@ -46,6 +47,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: ^4.0.0
   mockito: ^5.4.4
   build_runner: ^2.4.7
 
@@ -53,4 +55,4 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/templates/
+    - assets/scenes/
