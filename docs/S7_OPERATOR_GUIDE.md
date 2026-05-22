@@ -14,7 +14,7 @@
 | 项 | 正确值 | 错误示例 |
 |----|--------|----------|
 | **Root Directory** | `backend` | （留空 = 仓库根目录） |
-| **Build Command** | `npm install` | `npm install; npm run build` |
+| **Build Command** | `npm install` 或 `npm install && npm run build` | 在**仓库根目录**跑 `npm run build`（会装 Vite 前端） |
 | **Start Command** | `npm start` | 其它 |
 | **Health Check Path** | `/health/ready` | |
 
@@ -34,7 +34,7 @@
 | Name | `cleartalk-api`（或 `ClearTalk`，记下域名） |
 | **Root Directory** | **`backend`**（必填） |
 | Runtime | Node |
-| Build Command | `npm install`（仅安装后端依赖，不要 `npm run build`） |
+| Build Command | `npm install` 或 `npm install && npm run build`（后端已有 `build` 脚本，仅做语法检查） |
 | Start Command | `npm start` |
 | Health Check Path | `/health/ready` |
 
@@ -138,6 +138,7 @@
 | 验证码 503 | 未配 SMTP；配好 `EMAIL_*` 后 Redeploy API |
 | `/health/ready` 503 | 未配置任何 AI Key |
 | 重置密码链接无效 | 确认 `FRONTEND_URL` 与 Vercel 访问域名一致 |
+| `Missing script: "build"` | 确认 **Root Directory = `backend`**；拉取最新 `main`（已为 backend 增加 `build` 脚本） |
 
 ---
 
