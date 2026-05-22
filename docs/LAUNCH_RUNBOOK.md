@@ -4,7 +4,8 @@
 
 ---
 
-> **S7 逐步操作（Render/Vercel/SMTP）**：见 [`S7_OPERATOR_GUIDE.md`](S7_OPERATOR_GUIDE.md)
+> **S7 逐步操作（Render/Vercel/SMTP）**：见 [`S7_OPERATOR_GUIDE.md`](S7_OPERATOR_GUIDE.md)  
+> **Render 环境变量复制表**：见 [`RENDER_ENV_COPY.md`](RENDER_ENV_COPY.md)
 
 ## 0. 上线前本地预检
 

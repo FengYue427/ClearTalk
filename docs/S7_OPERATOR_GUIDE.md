@@ -42,13 +42,13 @@
    - Add Disk → 1 GB
    - Mount Path: `/opt/render/project/src/data`
 
-5. **Environment Variables**（Environment → Add）：
+5. **Environment Variables**（左侧 **Environment** → Add）— **缺 `JWT_SECRET` 会启动失败**：
 
 | 变量 | 值 | 说明 |
 |------|-----|------|
-| `NODE_ENV` | `production` | |
-| `JWT_SECRET` | 随机 32+ 字符 | 勿用默认值 |
-| `DEEPSEEK_API_KEY` | 你的 Key | 或 `OPENAI_API_KEY` / `QWEN_API_KEY` 至少一个 |
+| `NODE_ENV` | `production` | 必填 |
+| **`JWT_SECRET`** | **随机 32+ 字符** | **必填**；未设会日志 `[Startup] 生产环境必须设置 JWT_SECRET` 并退出 |
+| `DEEPSEEK_API_KEY` | 你的 Key | 生成 AI 需要；或 `OPENAI_API_KEY` / `QWEN_API_KEY` 至少一个 |
 | `ALLOWED_ORIGINS` | `https://你的-vercel域名.vercel.app` | 多个用英文逗号 |
 | `SQLITE_PATH` | `/opt/render/project/src/data/cleartalk.db` | |
 | `FRONTEND_URL` | `https://你的-vercel域名.vercel.app` | 密码重置邮件链接 |
@@ -139,6 +139,8 @@
 | `/health/ready` 503 | 未配置任何 AI Key |
 | 重置密码链接无效 | 确认 `FRONTEND_URL` 与 Vercel 访问域名一致 |
 | `Missing script: "build"` | 确认 **Root Directory = `backend`**；拉取最新 `main`（已为 backend 增加 `build` 脚本） |
+| `生产环境必须设置 JWT_SECRET` | Environment 添加 `JWT_SECRET`（任意长随机串，勿用默认值）→ Save → Redeploy |
+| Build 成功但 Exited status 1 | 看日志最后一行 `[Startup]` 提示，按上表补 env |
 
 ---
 
