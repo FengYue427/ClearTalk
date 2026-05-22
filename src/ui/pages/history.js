@@ -8,7 +8,7 @@ import { formatDate, escapeHtml, copyToClipboard, downloadFile, events } from '.
 import { showToast, showConfirm, showActionSheet, createEmptyState } from '../components/index.js';
 import { navigateTo } from './router.js';
 import { t } from '../../core/i18n.js';
-import { getSceneName } from '../../scenes/scene-l10n.js';
+import { getSceneName } from '../../core/scene-l10n.js';
 import { BUILTIN_SCENES } from '../../scenes/index.js';
 
 // 语言变化取消订阅函数

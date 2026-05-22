@@ -14,7 +14,7 @@ import { QuotaService } from '../../services/quota-service.js';
 import { showToast, showLoading, createButton, createEmptyState, showModal } from '../components/index.js';
 import { navigateTo } from './router.js';
 import { t } from '../../core/i18n.js';
-import { getSceneName, getSceneDescription, getFieldLabel, getFieldPlaceholder, getSelectOptionLabel } from '../../scenes/scene-l10n.js';
+import { getSceneName, getSceneDescription, getFieldLabel, getFieldPlaceholder, getSelectOptionLabel } from '../../core/scene-l10n.js';
 import { isVoiceSupported, createVoiceRecognizer, getVoiceLanguage } from '../../services/voice-service.js';
 import { logger } from '../../core/logger.js';
 

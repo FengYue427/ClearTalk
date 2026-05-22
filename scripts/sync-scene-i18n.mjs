@@ -14,11 +14,17 @@ const outPath = path.join(root, 'src', 'core', 'scene-translations.generated.js'
 const builtinPath = path.join(root, 'assets', 'scenes', 'builtin.json');
 const enSceneFallbacksPath = path.join(__dirname, 'scene-en-fallbacks.json');
 const fieldLabelEnPath = path.join(__dirname, 'field-label-en.json');
+const fieldLabelSupplementPath = path.join(__dirname, 'field-label-en-supplement.json');
 
 const dart = fs.readFileSync(dartPath, 'utf8');
 const builtin = JSON.parse(fs.readFileSync(builtinPath, 'utf8'));
 const enSceneFallbacks = JSON.parse(fs.readFileSync(enSceneFallbacksPath, 'utf8'));
-const fieldLabelEn = JSON.parse(fs.readFileSync(fieldLabelEnPath, 'utf8'));
+const fieldLabelEn = {
+  ...JSON.parse(fs.readFileSync(fieldLabelEnPath, 'utf8')),
+  ...(fs.existsSync(fieldLabelSupplementPath)
+    ? JSON.parse(fs.readFileSync(fieldLabelSupplementPath, 'utf8'))
+    : {})
+};
 
 const HAS_CJK = /[\u4e00-\u9fff]/;
 
@@ -55,7 +61,29 @@ function parseSceneKeys(block) {
 function enLabel(text) {
   if (!text || typeof text !== 'string') return text;
   const trimmed = text.trim();
-  return fieldLabelEn[trimmed] || trimmed;
+  if (fieldLabelEn[trimmed]) return fieldLabelEn[trimmed];
+  const eg = trimmed.match(/^如[：:]\s*(.+)$/);
+  if (eg) {
+    const inner = fieldLabelEn[eg[1]] || eg[1];
+    return `e.g. ${inner}`;
+  }
+  if (trimmed === '简要说明原因') return 'Brief reason';
+  if (trimmed === '简要说明') return 'Brief description';
+  if (trimmed === '简要说明即可，无需详述') return 'Brief note is enough';
+  if (HAS_CJK.test(trimmed)) {
+    console.warn(`[sync-scene-i18n] missing EN map: ${trimmed.slice(0, 40)}`);
+  }
+  return trimmed;
+}
+
+function scrubEnFromZh(zh, en) {
+  for (const [key, zhVal] of Object.entries(zh)) {
+    const cur = en[key];
+    if (cur === undefined || HAS_CJK.test(String(cur))) {
+      const mapped = enLabel(zhVal);
+      if (!HAS_CJK.test(mapped)) en[key] = mapped;
+    }
+  }
 }
 
 function applyBuiltinFields(scene, zh, en) {
@@ -67,35 +95,33 @@ function applyBuiltinFields(scene, zh, en) {
     if (field.label) {
       if (!zh[base]) zh[base] = field.label;
       if (!zh[generic]) zh[generic] = field.label;
-      if (!en[base] || HAS_CJK.test(en[base])) en[base] = enLabel(field.label);
-      if (!en[generic] || HAS_CJK.test(en[generic])) en[generic] = enLabel(field.label);
+      en[base] = enLabel(field.label);
+      en[generic] = enLabel(field.label);
     }
 
     if (field.placeholder) {
       const phKey = `${base}.placeholder`;
       const phGeneric = `${generic}.placeholder`;
       if (!zh[phKey]) zh[phKey] = field.placeholder;
-      if (!en[phKey] || HAS_CJK.test(en[phKey])) en[phKey] = enLabel(field.placeholder);
-      if (!en[phGeneric] || HAS_CJK.test(en[phGeneric])) en[phGeneric] = enLabel(field.placeholder);
+      en[phKey] = enLabel(field.placeholder);
+      en[phGeneric] = enLabel(field.placeholder);
     }
 
     if (field.hint) {
       const hintKey = `${base}.hint`;
       if (!zh[hintKey]) zh[hintKey] = field.hint;
-      if (!en[hintKey] || HAS_CJK.test(en[hintKey])) en[hintKey] = enLabel(field.hint);
+      en[hintKey] = enLabel(field.hint);
     }
 
     for (const opt of field.options || []) {
       const optVal = typeof opt === 'string' ? opt : opt.value ?? opt.label;
-      const optSlug =
-        typeof opt === 'object' && opt.value
-          ? String(opt.value)
-          : String(optVal).replace(/\s+/g, '_').slice(0, 32);
-      const optKey = `${base}.option.${optSlug}`;
-      if (!zh[optKey]) zh[optKey] = typeof opt === 'string' ? opt : opt.label || opt.value;
-      if (!en[optKey] || HAS_CJK.test(en[optKey])) {
-        en[optKey] = enLabel(typeof opt === 'string' ? opt : opt.label || opt.value);
-      }
+      const optKey = `${base}.option.${optVal}`;
+      const optGeneric = `${generic}.option.${optVal}`;
+      const label = typeof opt === 'string' ? opt : opt.label || opt.value;
+      if (!zh[optKey]) zh[optKey] = label;
+      if (!zh[optGeneric]) zh[optGeneric] = label;
+      en[optKey] = enLabel(label);
+      en[optGeneric] = enLabel(label);
     }
   }
 }
@@ -128,13 +154,21 @@ for (const scene of builtin) {
   if (!zh[descKey]) zh[descKey] = scene.description;
 
   if (!en[nameKey] || HAS_CJK.test(en[nameKey])) {
-    en[nameKey] = fallback?.name || en[nameKey] || scene.name;
+    en[nameKey] = fallback?.name || nameKey;
   }
   if (!en[descKey] || HAS_CJK.test(en[descKey])) {
-    en[descKey] = fallback?.desc || en[descKey] || scene.description;
+    en[descKey] = fallback?.desc || '';
   }
 
   applyBuiltinFields(scene, zh, en);
+}
+
+scrubEnFromZh(zh, en);
+
+const enCjk = Object.entries(en).filter(([, v]) => HAS_CJK.test(String(v)));
+if (enCjk.length) {
+  console.error(`EN dict still has ${enCjk.length} CJK entries, e.g.:`, enCjk.slice(0, 5));
+  process.exit(1);
 }
 
 const content = `/**

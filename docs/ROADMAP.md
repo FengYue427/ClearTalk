@@ -21,6 +21,7 @@
 | 8（S6） | 上市清单同步、Runbook、launch:verify、Admin 看板、注册合规链 |
 | 8b | 第二轮审查：场景 i18n 同步、设置语言修复、UI 硬编码清理 |
 | 8c | Vercel Vite 部署修复（`vercel-build`）、上市文档与签收单 |
+| 8d | 严格双语：451 字段映射、EN 词典零 CJK 构建校验、`scene-l10n` 迁入 core |
 
 ---
 
@@ -33,7 +34,7 @@
 | Vercel 生产 Ready | ✅（你方确认） |
 | Render API 上线 | 🚀 S7 重点 |
 
-**执行计划**：见 [`docs/PLAN_S7_LAUNCH_ALIGNMENT.md`](PLAN_S7_LAUNCH_ALIGNMENT.md)
+**执行计划**：见 [`docs/PLAN_S7_LAUNCH_ALIGNMENT.md`](PLAN_S7_LAUNCH_ALIGNMENT.md) · **上架总计划**：[`docs/LAUNCH_MASTER_PLAN.md`](LAUNCH_MASTER_PLAN.md)
 
 ---
 

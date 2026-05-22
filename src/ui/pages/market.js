@@ -15,7 +15,7 @@ import {
   getSceneDescription,
   getCategoryName,
   getFieldLabel
-} from '../../scenes/scene-l10n.js';
+} from '../../core/scene-l10n.js';
 import { CATEGORIES } from '../../scenes/index.js';
 
 // 语言变化取消订阅函数

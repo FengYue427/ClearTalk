@@ -32,7 +32,7 @@
 | 市场 | `market-service.js` ↔ `/api/market/*` |
 | 反馈 / 埋点 / Admin | `feedback-service.js`、`analytics-service.js`、`public/admin.html` |
 | 合规页 | `public/privacy.html`、`terms.html`、`disclaimer.html` |
-| 中英文 | `scene-l10n.js`、`scene-translations.generated.js`、`setLanguage` |
+| 中英文 | `src/core/scene-l10n.js`、`scene-translations.generated.js`（EN 零 CJK）、`setLanguage` |
 | 安全基线 | 限流、JWT 守卫、`redactSensitiveText`、生产 JWT 检查脚本 |
 | CI | `ci.yml`：web 构建、E2E、backend 语法、Flutter analyze |
 
@@ -65,7 +65,7 @@
 | P2-2 | 语气卡片 `substring(0,20)` | `scene-detail.js` |
 | P2-3 | Flutter `history_page` 硬编码 | 「复制全文」「关闭」 |
 | P2-4 | `legacy/` 本地模板 id 与场景 id 不一致 | 仅 **local** AI 模式 |
-| P2-5 | 场景字段英文键未 100% 覆盖 | 无键时回退中文 label |
+| P2-5 | 场景字段英文键未 100% 覆盖 | ✅ 8d 已解决；仅剩静态法务页中文 |
 | P2-6 | `public/` 法务页仅中文 | 可接受，建议法务审阅 |
 
 ### 2.3 Web ↔ Flutter 功能对照（上市宣传：以 Web 为准）

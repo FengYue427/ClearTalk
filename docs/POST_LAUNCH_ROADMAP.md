@@ -24,7 +24,8 @@
 
 | 任务 | 说明 |
 |------|------|
-| 场景字段 100% 英文化 | 补全 `scene.field.*` 未覆盖键；`sync-scene-i18n` 与 JSON 单源对齐 |
+| 场景字段 100% 英文化 | ✅ 8d：`field-label-en.json` 451 条 + `scenes:build` EN 零 CJK 校验 |
+| 静态法务页中英 | `web/` privacy/terms/disclaimer 双语或独立 `/en/` 路径 |
 | 语气卡片 UI | 去掉 `substring(0,20)` 截断，改用完整 `tone.desc` 键 |
 | 对话页内容区 | 小屏下验证固定底栏不遮挡最后一条消息 |
 | 市场 UGC | 引导用户分享场景；运营位推荐模板 |

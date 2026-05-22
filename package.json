@@ -10,7 +10,7 @@
     "build": "vite build",
     "vercel-build": "npm run scenes:build && npm run build",
     "preview": "vite preview",
-    "scenes:build": "node scripts/extract-scenes.mjs --from-json && node scripts/sync-scene-i18n.mjs",
+    "scenes:build": "node scripts/merge-field-label-en.mjs && node scripts/extract-scenes.mjs --from-json && node scripts/sync-scene-i18n.mjs",
     "scenes:flutter": "node scripts/build-flutter-scenes.mjs",
     "sitemap": "node scripts/generate-sitemap.mjs",
     "test": "vitest run",

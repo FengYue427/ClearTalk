@@ -3,7 +3,7 @@
  */
 import { state } from '../core/state.js';
 import { t } from '../core/i18n.js';
-import { getSceneName, getSceneDescription } from '../scenes/scene-l10n.js';
+import { getSceneName, getSceneDescription } from '../core/scene-l10n.js';
 
 const SITE_NAME = 'ClearTalk';
 

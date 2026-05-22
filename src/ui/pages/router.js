@@ -15,7 +15,7 @@ import { initSettings } from './settings.js';
 import { Seo } from '../../services/seo-service.js';
 import { getSceneById } from '../../scenes/index.js';
 import { t } from '../../core/i18n.js';
-import { getSceneName } from '../../scenes/scene-l10n.js';
+import { getSceneName } from '../../core/scene-l10n.js';
 
 // 页面配置
 const PAGES = {

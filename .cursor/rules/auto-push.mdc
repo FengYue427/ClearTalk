@@ -1,0 +1,16 @@
+---
+description: After completing code changes the user asked to implement, commit and push to origin unless they say not to.
+alwaysApply: true
+---
+
+# Git push preference
+
+When the user asks you to implement, fix, or ship work on this repo:
+
+1. After changes are verified (build/test when relevant), **commit** with a clear message unless the user explicitly says not to commit.
+2. **Push** to `origin` on the current branch (usually `main`) unless the user explicitly says not to push.
+3. Do not force-push to `main`/`master`.
+4. Never commit secrets (`.env`, API keys, credentials).
+5. Exclude `node_modules/` from commits unless the user requests dependency updates.
+
+If push fails (auth, permissions), report the error and give exact commands for the user to run locally.

@@ -104,3 +104,5 @@ npm run launch:verify
 | `/health/ready` 503 | 生产未配置任何 AI Key |
 | 重启丢用户数据 | 未挂载 Disk 或未设 `SQLITE_PATH` |
 | 市场空列表 | 正常（无用户分享场景） |
+| 英文模式仍见中文 | 强刷或注销 PWA；确认已部署含 `field-label-en.json`（451 条）与零 CJK 的 `scene-translations.generated.js`；`npm run scenes:build` 会在 EN 词典含汉字时失败 |
+| 静态法务页仅中文 | 预期（`web/` 下 privacy/terms）；应用内 35 场景与表单应全英文 |

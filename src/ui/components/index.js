@@ -5,7 +5,7 @@
 import { escapeHtml, triggerHaptic } from '../../core/utils.js';
 import { state } from '../../core/state.js';
 import { t } from '../../core/i18n.js';
-import { getSceneName, getSceneDescription, getCategoryName } from '../../scenes/scene-l10n.js';
+import { getSceneName, getSceneDescription, getCategoryName } from '../../core/scene-l10n.js';
 
 // Toast 提示
 export function showToast(message, duration = 2000) {

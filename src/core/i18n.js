@@ -1361,6 +1361,19 @@ export function initI18n() {
   });
 }
 
+const HAS_CJK = /[\u4e00-\u9fff]/;
+
+/** 场景/字段键翻译（英文不回落中文，且英文值不得含汉字） */
+export function trScene(key) {
+  const lang = state.language || currentLanguage;
+  const text = translations[lang]?.[key];
+  if (text !== undefined && text !== '' && text !== key) {
+    if (lang === 'en' && HAS_CJK.test(text)) return key;
+    return text;
+  }
+  return lang === 'zh' ? (translations.zh?.[key] ?? key) : key;
+}
+
 // 获取翻译文本
 export function t(key, params = {}) {
   const lang = state.language || currentLanguage;

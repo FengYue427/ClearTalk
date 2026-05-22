@@ -12,7 +12,7 @@ import { createSceneCard, createEmptyState, showToast } from '../components/inde
 import { initSceneDetail } from './scene-detail.js';
 import { navigateTo } from './router.js';
 import { t } from '../../core/i18n.js';
-import { getSceneName, getCategoryName } from '../../scenes/scene-l10n.js';
+import { getSceneName, getCategoryName } from '../../core/scene-l10n.js';
 
 // 语言变化取消订阅函数
 let homeLanguageUnsubscribe = null;
