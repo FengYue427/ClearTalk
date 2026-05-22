@@ -9,7 +9,6 @@ import { Storage } from './core/storage.js';
 import { logger, perfStart, perfEnd } from './core/logger.js';
 import { events, isOnline } from './core/utils.js';
 import { API_BASE_URL, APP_INFO } from './core/config.js';
-import { t } from './core/i18n.js';
 import { initI18n, t } from './core/i18n.js';
 
 // 服务模块
