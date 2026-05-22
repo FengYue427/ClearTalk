@@ -6,6 +6,10 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const PRODUCTION_API_URL =
+  process.env.VITE_API_URL?.replace(/\/$/, '') ||
+  'https://cleartalk-cu84.onrender.com';
+
 export default defineConfig({
   root: 'src',
   publicDir: path.resolve(__dirname, 'public'),
@@ -76,6 +80,9 @@ export default defineConfig({
   },
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
-    __DEV__: JSON.stringify(process.env.NODE_ENV === 'development')
+    __DEV__: JSON.stringify(process.env.NODE_ENV === 'development'),
+    'import.meta.env.VITE_API_URL': JSON.stringify(
+      process.env.NODE_ENV === 'production' ? PRODUCTION_API_URL : (process.env.VITE_API_URL || '')
+    )
   }
 });
