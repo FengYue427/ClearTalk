@@ -5,11 +5,13 @@
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "https://cleartalk-api.onrender.com/api/$1"
-    },
+      "source": "/api/(.*)",
+      "destination": "https://cleartalk-cu84.onrender.com/api/$1"
+    }
+  ],
+  "routes": [
     {
       "handle": "filesystem"
     },

@@ -4,7 +4,15 @@
 
 // API 基础配置
 const env = (typeof import.meta !== 'undefined' && import.meta.env) ? import.meta.env : {};
-export const API_BASE_URL = env.VITE_API_URL || '';
+
+/** 去掉末尾斜杠；生产构建见 .env.production 或 Vercel 环境变量 */
+export const API_BASE_URL = (() => {
+  const raw = env.VITE_API_URL || '';
+  const trimmed = String(raw).trim().replace(/\/$/, '');
+  if (trimmed) return trimmed;
+  // 开发：走 Vite proxy（相对路径 /api）
+  return '';
+})();
 
 // 应用信息
 export const APP_INFO = {
