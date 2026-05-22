@@ -8,13 +8,7 @@
 | Key | 示例 | 说明 |
 |-----|------|------|
 | `NODE_ENV` | `production` | |
-| `JWT_SECRET` | `paste-a-long-random-string-here-32chars+` | 自行生成，**不要**留空或使用文档默认值 |
-
-生成随机串（本机 PowerShell）：
-
-```powershell
-[Convert]::ToBase64String((1..48 | ForEach-Object { Get-Random -Maximum 256 }))
-```
+| `JWT_SECRET` | 见仓库根目录 **`render-secrets.local.env`**（已生成，勿提交 Git） | **不要**留空或使用文档默认值 |
 
 ## AI 生成（至少填一个）
 
