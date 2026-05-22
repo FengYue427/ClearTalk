@@ -59,7 +59,7 @@ async function main() {
   }
 
   try {
-    const webRes = await fetch(WEB, { signal: AbortSignal.timeout(45000) });
+    const webRes = await fetch(WEB, { signal: AbortSignal.timeout(45000), headers: FETCH_HEADERS });
     if (!webRes.ok) fail('WEB index', String(webRes.status));
     else ok(`WEB index HTTP ${webRes.status}`);
     const html = await webRes.text();
@@ -68,7 +68,7 @@ async function main() {
       fail('WEB core chunk', 'not found in index.html');
     } else {
       const coreUrl = `${WEB}/${coreMatch[0]}`;
-      const coreRes = await fetch(coreUrl, { signal: AbortSignal.timeout(60000) });
+      const coreRes = await fetch(coreUrl, { signal: AbortSignal.timeout(60000), headers: FETCH_HEADERS });
       const js = await coreRes.text();
       const bundleChecks = [
         ['Leave Request', 'EN scene title in bundle'],
@@ -87,7 +87,7 @@ async function main() {
 
   for (const path of ['/privacy.html', '/privacy-en.html', '/terms-en.html', '/disclaimer-en.html']) {
     try {
-      const r = await fetch(`${WEB}${path}`);
+      const r = await fetch(`${WEB}${path}`, { headers: FETCH_HEADERS });
       if (r.ok) ok(`${path} accessible`);
       else fail(path, String(r.status));
     } catch (e) {
