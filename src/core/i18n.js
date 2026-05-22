@@ -16,6 +16,10 @@ const translations = {
     'app.slogan': '智能对话，轻松表达',
     'app.description': 'AI驱动的沟通文本生成助手，帮助您清晰得体地表达诉求',
     'app.offline_mode': '离线模式',
+    'app.protocol_warning.title': '请使用服务器打开',
+    'app.protocol_warning.body1': '直接打开文件无法正常使用部分功能',
+    'app.protocol_warning.body2': '建议使用 VS Code Live Server 或 npm run dev',
+    'app.protocol_warning.dismiss': '我知道了',
     'loading': '加载中...',
     'input.title': '填写信息',
     'input.step.fill': '填写信息',
@@ -57,6 +61,7 @@ const translations = {
     'share.card.download': '保存图片',
     'share.card.system': '系统分享',
     'share.card.failed': '分享图生成失败',
+    'share.card.footer': '扫码或访问使用 ClearTalk 生成你的沟通文本',
     'feedback.prompt': '这条结果对你有帮助吗？',
     'feedback.helpful': '有帮助',
     'feedback.not_helpful': '需改进',
@@ -516,6 +521,7 @@ const translations = {
     'error.unknown': '未知错误，请重试',
     'error.timeout': '请求超时，请检查网络',
     'error.loading': '加载失败',
+    'error.api_proxy_hint': '请配置 VITE_API_URL 或检查 vercel.json 是否指向正确的 Render API',
     
     // 认证相关
     'auth.login.success': '登录成功',
@@ -657,6 +663,10 @@ const translations = {
     'app.slogan': 'Smart Dialogue, Easy Expression',
     'app.description': 'AI-powered communication assistant helping you express yourself clearly and appropriately',
     'app.offline_mode': 'Offline Mode',
+    'app.protocol_warning.title': 'Please use a local server',
+    'app.protocol_warning.body1': 'Opening files directly limits some features',
+    'app.protocol_warning.body2': 'Use VS Code Live Server or run npm run dev',
+    'app.protocol_warning.dismiss': 'Got it',
     'common.confirm': 'Confirm',
     'common.cancel': 'Cancel',
     'common.duplicate': 'This item already exists',
@@ -696,6 +706,7 @@ const translations = {
     'share.card.download': 'Save image',
     'share.card.system': 'Share…',
     'share.card.failed': 'Failed to create share image',
+    'share.card.footer': 'Scan or visit ClearTalk to draft your message',
     'feedback.prompt': 'Was this result helpful?',
     'feedback.helpful': 'Helpful',
     'feedback.not_helpful': 'Needs work',
@@ -1161,6 +1172,7 @@ const translations = {
     'error.unknown': 'Unknown error',
     'error.timeout': 'Request timed out, please check network',
     'error.loading': 'Loading failed',
+    'error.api_proxy_hint': 'Set VITE_API_URL or check vercel.json points to the correct Render API',
     
     // Auth Errors
     'auth.error.empty.fields': 'Please fill all required fields',

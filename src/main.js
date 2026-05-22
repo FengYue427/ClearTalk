@@ -9,6 +9,7 @@ import { Storage } from './core/storage.js';
 import { logger, perfStart, perfEnd } from './core/logger.js';
 import { events, isOnline } from './core/utils.js';
 import { API_BASE_URL, APP_INFO } from './core/config.js';
+import { t } from './core/i18n.js';
 import { initI18n, t } from './core/i18n.js';
 
 // 服务模块
@@ -197,10 +198,10 @@ function checkProtocol() {
     warning.className = 'protocol-warning';
     warning.innerHTML = `
       <div class="protocol-warning-content">
-        <h3>⚠️ 请使用服务器打开</h3>
-        <p>直接打开文件无法正常使用部分功能</p>
-        <p>建议使用 VS Code Live Server</p>
-        <button id="btn-dismiss-warning">我知道了</button>
+        <h3>⚠️ ${t('app.protocol_warning.title')}</h3>
+        <p>${t('app.protocol_warning.body1')}</p>
+        <p>${t('app.protocol_warning.body2')}</p>
+        <button id="btn-dismiss-warning">${t('app.protocol_warning.dismiss')}</button>
       </div>
     `;
     document.body.insertBefore(warning, document.body.firstChild);

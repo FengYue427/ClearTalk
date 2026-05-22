@@ -3,6 +3,7 @@
  */
 
 import { APP_INFO } from '../core/config.js';
+import { t } from '../core/i18n.js';
 
 const CARD_WIDTH = 720;
 const CARD_PADDING = 40;
@@ -105,7 +106,7 @@ export async function generateShareCardBlob(options) {
 
   ctx.fillStyle = '#64748b';
   ctx.font = '14px system-ui, sans-serif';
-  ctx.fillText('扫码或访问使用 ClearTalk 生成你的沟通文本', CARD_PADDING, footerY + 4);
+  ctx.fillText(t('share.card.footer'), CARD_PADDING, footerY + 4);
 
   try {
     const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(shareUrl)}`;

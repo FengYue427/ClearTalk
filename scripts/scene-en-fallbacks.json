@@ -1,0 +1,90 @@
+{
+  "noise_complaint": {
+    "name": "Noise Complaint",
+    "desc": "Complain about noise to neighbors or property management"
+  },
+  "parking_occupied": {
+    "name": "Parking Space Dispute",
+    "desc": "Ask the person occupying your parking space to move"
+  },
+  "package_issue": {
+    "name": "Package Delivery Issue",
+    "desc": "Express delivery delay, loss, or damage"
+  },
+  "pet_complaint": {
+    "name": "Pet Disturbance",
+    "desc": "Neighbor pet noise or hygiene issues"
+  },
+  "gym_refund": {
+    "name": "Gym Membership Refund",
+    "desc": "Cancel or transfer gym membership"
+  },
+  "beauty_refund": {
+    "name": "Salon / Barbershop Refund",
+    "desc": "Prepaid card refund or service complaint"
+  },
+  "driving_school_refund": {
+    "name": "Driving School Refund",
+    "desc": "Drop out or transfer driving school"
+  },
+  "course_refund": {
+    "name": "Course Refund",
+    "desc": "Training class or online course refund"
+  },
+  "school_leave": {
+    "name": "School Leave Request",
+    "desc": "Request leave from school or teacher"
+  },
+  "tutor_arrange": {
+    "name": "Tutor / Training Coordination",
+    "desc": "Coordinate schedule or content with tutor or training center"
+  },
+  "appointment_change": {
+    "name": "Reschedule / Cancel Appointment",
+    "desc": "Reschedule or cancel a clinic or hospital appointment"
+  },
+  "medical_record_inquiry": {
+    "name": "Medical Report Inquiry",
+    "desc": "Ask your doctor about test or lab results"
+  },
+  "referral_request": {
+    "name": "Referral Request",
+    "desc": "Request a referral letter from your doctor"
+  },
+  "complaint_suggestion": {
+    "name": "Complaint or Suggestion",
+    "desc": "Submit a complaint or suggestion to government services"
+  },
+  "admin_inquiry": {
+    "name": "Service Inquiry",
+    "desc": "Ask about procedures and required documents"
+  },
+  "document_progress": {
+    "name": "Document Processing Status",
+    "desc": "Inquire about ID or certificate processing progress"
+  },
+  "work_handover": {
+    "name": "Work Handover Note",
+    "desc": "Explain handover items when leaving or changing roles"
+  },
+  "meeting_followup": {
+    "name": "Meeting Follow-up",
+    "desc": "Send meeting minutes and follow up on action items"
+  },
+  "subscription_cancel": {
+    "name": "Cancel Subscription / Membership",
+    "desc": "Request cancellation of auto-renewal or membership"
+  },
+  "insurance_claim": {
+    "name": "Insurance Claim",
+    "desc": "Explain your claim and urge the insurer to process it"
+  },
+  "neighbor_notice": {
+    "name": "Neighbor Notice",
+    "desc": "Notify neighbors about renovation, events, or other matters"
+  },
+  "wedding_invite_reply": {
+    "name": "Wedding Invitation Reply",
+    "desc": "Reply to a wedding invitation — attend or decline politely"
+  }
+}

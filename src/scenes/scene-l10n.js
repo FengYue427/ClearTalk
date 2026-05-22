@@ -4,6 +4,18 @@
 
 import { t } from '../core/i18n.js';
 
+const CATEGORY_I18N_KEYS = {
+  职场沟通: 'home.categories.work',
+  消费平台: 'home.categories.shopping',
+  租房物业: 'home.categories.housing',
+  人际金钱: 'home.categories.money',
+  日常生活: 'home.categories.daily_life',
+  消费维权: 'home.categories.consumer',
+  教育培训: 'home.categories.education',
+  医疗健康: 'home.categories.healthcare',
+  政务服务: 'home.categories.gov'
+};
+
 export function sceneNameKey(scene) {
   return scene.translationKey || `scene.${scene.id}.name`;
 }
@@ -51,6 +63,16 @@ export function getFieldPlaceholder(field, sceneId) {
   const generic = t(`scene.field.${field.key}.placeholder`);
   if (generic !== `scene.field.${field.key}.placeholder`) return generic;
   return field.placeholder || '';
+}
+
+export function getCategoryName(categoryId) {
+  if (!categoryId) return '';
+  const key = CATEGORY_I18N_KEYS[categoryId];
+  if (key) {
+    const text = t(key);
+    if (text !== key) return text;
+  }
+  return categoryId;
 }
 
 export function getSelectOptionLabel(field, option, sceneId) {

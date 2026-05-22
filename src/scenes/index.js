@@ -3,6 +3,7 @@
  */
 
 import { BUILTIN_SCENES } from './builtin-data.js';
+import { buildSceneSearchBlob } from './search-text.js';
 
 export { BUILTIN_SCENES };
 
@@ -88,12 +89,11 @@ export function searchScenes(query, customScenes = []) {
   const allScenes = [...BUILTIN_SCENES, ...customScenes];
   const lowerQuery = query.toLowerCase();
 
-  return allScenes.filter(
-    (scene) =>
-      scene.name.toLowerCase().includes(lowerQuery) ||
-      scene.description.toLowerCase().includes(lowerQuery) ||
-      scene.category.toLowerCase().includes(lowerQuery)
-  );
+  const lang =
+    typeof document !== 'undefined'
+      ? document.documentElement.getAttribute('data-lang') || 'zh'
+      : 'zh';
+  return allScenes.filter((scene) => buildSceneSearchBlob(scene, lang).includes(lowerQuery));
 }
 
 export function getSceneById(id, customScenes = []) {

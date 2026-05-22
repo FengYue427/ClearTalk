@@ -4,6 +4,7 @@
 
 import { API_BASE_URL } from '../core/config.js';
 import { logger } from '../core/logger.js';
+import { t } from '../core/i18n.js';
 
 // 请求拦截器
 const requestInterceptors = [];
@@ -50,9 +51,7 @@ async function request(endpoint, options = {}) {
       const error = await finalResponse.json().catch(() => ({ message: 'Request failed' }));
       const msg = error.error || error.message || `HTTP ${finalResponse.status}`;
       if (finalResponse.status === 403 && url.includes('/api/') && !API_BASE_URL) {
-        throw new Error(
-          `${msg} — 请配置 VITE_API_URL 或检查 vercel.json 是否指向正确的 Render API`
-        );
+        throw new Error(`${msg} — ${t('error.api_proxy_hint')}`);
       }
       throw new Error(msg);
     }

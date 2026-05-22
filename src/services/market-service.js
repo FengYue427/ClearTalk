@@ -151,7 +151,7 @@ export const MarketService = {
         scene: {
           name: scene.name,
           description: scene.description,
-          category: scene.category || '日常沟通',
+          category: scene.category || '日常生活',
           icon: scene.icon || '📝',
           fields: scene.fields,
           tags: scene.tags || []

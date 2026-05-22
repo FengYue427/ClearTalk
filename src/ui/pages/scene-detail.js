@@ -269,7 +269,7 @@ function createFormField(field) {
     const voiceBtn = document.createElement('button');
     voiceBtn.className = 'btn-voice-input';
     voiceBtn.type = 'button';
-    voiceBtn.title = t('input.voice') || '语音输入';
+    voiceBtn.title = t('input.voice');
     voiceBtn.innerHTML = `
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
@@ -293,7 +293,7 @@ function createFormField(field) {
         interimResults: true,
         onStart: () => {
           voiceBtn.classList.add('listening');
-          input.placeholder = t('input.voice.listening') || '正在聆听...';
+          input.placeholder = t('input.voice.listening');
         },
         onResult: (text, isFinal) => {
           input.value = text;
@@ -307,7 +307,7 @@ function createFormField(field) {
           logger.warn('Voice input error:', err);
           voiceBtn.classList.remove('listening');
           input.placeholder = placeholderText || '';
-          showToast(t('input.voice.error') || '语音识别失败');
+          showToast(t('input.voice.error'));
         },
         onEnd: () => {
           voiceBtn.classList.remove('listening');
@@ -318,7 +318,7 @@ function createFormField(field) {
       if (recognizer) {
         recognizer.start();
       } else {
-        showToast(t('input.voice.unsupported') || '浏览器不支持语音输入');
+        showToast(t('input.voice.unsupported'));
       }
     });
 

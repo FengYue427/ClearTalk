@@ -10,7 +10,12 @@ import { triggerHaptic, isOnline, events } from '../../core/utils.js';
 import { showToast, showLoading, showConfirm, createEmptyState, createSceneCard } from '../components/index.js';
 import { navigateTo } from './router.js';
 import { t } from '../../core/i18n.js';
-import { getSceneName } from '../../scenes/scene-l10n.js';
+import {
+  getSceneName,
+  getSceneDescription,
+  getCategoryName,
+  getFieldLabel
+} from '../../scenes/scene-l10n.js';
 import { CATEGORIES } from '../../scenes/index.js';
 
 // 语言变化取消订阅函数
@@ -283,12 +288,6 @@ function renderScenes() {
   });
 }
 
-// 获取分类名称（支持翻译）
-function getCategoryName(categoryId) {
-  const category = CATEGORIES.find(c => c.id === categoryId);
-  return category?.translationKey ? t(category.translationKey) : categoryId;
-}
-
 // 创建市场卡片
 function createMarketCard(scene) {
   const isMyTab = currentTab === 'my';
@@ -304,10 +303,10 @@ function createMarketCard(scene) {
             <span class="card-category">${escapeHtml(getCategoryName(scene.category))}</span>
           </div>
         </div>
-        <p class="card-desc">${escapeHtml(scene.descriptionKey ? t(scene.descriptionKey) : scene.description)}</p>
+        <p class="card-desc">${escapeHtml(getSceneDescription(scene))}</p>
         <div class="card-fields">
-          ${(scene.fields || []).slice(0, 3).map(f => {
-            const fieldLabel = f.translationKey ? t(f.translationKey) : (f.label || f.key);
+          ${(scene.fields || []).slice(0, 3).map((f) => {
+            const fieldLabel = getFieldLabel(f, scene.id);
             return `<span class="field-tag">${escapeHtml(fieldLabel)}</span>`;
           }).join('')}
           ${(scene.fields || []).length > 3 ? `<span class="field-tag">+${scene.fields.length - 3}</span>` : ''}

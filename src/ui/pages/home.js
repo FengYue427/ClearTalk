@@ -4,7 +4,7 @@
 
 import { state, subscribe } from '../../core/state.js';
 import { Storage } from '../../core/storage.js';
-import { triggerHaptic, debounce, events } from '../../core/utils.js';
+import { triggerHaptic, debounce, events, escapeHtml } from '../../core/utils.js';
 import { CATEGORIES, BUILTIN_SCENES, getScenesByCategory, searchScenes } from '../../scenes/index.js';
 import { analyzePasteText } from '../../services/paste-service.js';
 import { Analytics } from '../../services/analytics-service.js';
@@ -12,7 +12,7 @@ import { createSceneCard, createEmptyState, showToast } from '../components/inde
 import { initSceneDetail } from './scene-detail.js';
 import { navigateTo } from './router.js';
 import { t } from '../../core/i18n.js';
-import { getSceneName } from '../../scenes/scene-l10n.js';
+import { getSceneName, getCategoryName } from '../../scenes/scene-l10n.js';
 
 // 语言变化取消订阅函数
 let homeLanguageUnsubscribe = null;
@@ -235,7 +235,7 @@ async function analyzePaste(text, resultsEl) {
       <span class="match-icon">${scene.icon || '📝'}</span>
       <span class="match-info">
         <strong>${getSceneName(scene)}</strong>
-        <small>${scene.category}${matchedKeywords.length ? ' · ' + matchedKeywords.slice(0, 2).join('、') : ''}</small>
+        <small>${escapeHtml(getCategoryName(scene.category))}${matchedKeywords.length ? ' · ' + escapeHtml(matchedKeywords.slice(0, 2).join(', ')) : ''}</small>
       </span>
       <span class="match-arrow">→</span>
     `;

@@ -5,8 +5,7 @@
 import { escapeHtml, triggerHaptic } from '../../core/utils.js';
 import { state } from '../../core/state.js';
 import { t } from '../../core/i18n.js';
-import { getSceneName, getSceneDescription } from '../../scenes/scene-l10n.js';
-import { CATEGORIES } from '../../scenes/index.js';
+import { getSceneName, getSceneDescription, getCategoryName } from '../../scenes/scene-l10n.js';
 
 // Toast 提示
 export function showToast(message, duration = 2000) {
@@ -297,9 +296,7 @@ export function createSceneCard(scene, onClick) {
   
   const sceneName = escapeHtml(getSceneName(scene));
   const sceneDesc = escapeHtml(getSceneDescription(scene));
-  const categoryKey = scene.category;
-  const categoryI18nKey = CATEGORIES.find((c) => c.id === categoryKey)?.translationKey;
-  const sceneCategory = categoryI18nKey ? t(categoryI18nKey) : escapeHtml(categoryKey);
+  const sceneCategory = escapeHtml(getCategoryName(scene.category));
   
   card.innerHTML = `
     <div class="scene-icon">${scene.icon || '📝'}</div>
