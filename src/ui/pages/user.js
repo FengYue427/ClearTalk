@@ -10,6 +10,7 @@ import { UserService } from '../../services/user-service.js';
 import { showToast, showConfirm, showModal } from '../components/index.js';
 import { navigateTo } from './router.js';
 import { t } from '../../core/i18n.js';
+import { getLegalPageUrl } from '../../core/legal-urls.js';
 
 // 页面状态
 let currentMode = 'login'; // 'login', 'register', 'code-login', 'forgot-password'
@@ -391,11 +392,11 @@ function renderRegisterForm() {
       
       <p class="auth-legal">
         ${t('user.register.legal')}
-        <a href="/privacy.html" target="_blank" rel="noopener">${t('settings.privacy')}</a>
+        <a href="${getLegalPageUrl('/privacy.html')}" target="_blank" rel="noopener">${t('settings.privacy')}</a>
         ·
-        <a href="/terms.html" target="_blank" rel="noopener">${t('settings.terms')}</a>
+        <a href="${getLegalPageUrl('/terms.html')}" target="_blank" rel="noopener">${t('settings.terms')}</a>
         ·
-        <a href="/disclaimer.html" target="_blank" rel="noopener">${t('settings.disclaimer')}</a>
+        <a href="${getLegalPageUrl('/disclaimer.html')}" target="_blank" rel="noopener">${t('settings.disclaimer')}</a>
       </p>
 
       <button type="submit" class="btn btn-primary btn-large btn-submit" id="btn-submit">

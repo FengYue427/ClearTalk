@@ -25,7 +25,7 @@
 | 任务 | 说明 |
 |------|------|
 | 场景字段 100% 英文化 | ✅ 8d：`field-label-en.json` 451 条 + `scenes:build` EN 零 CJK 校验 |
-| 静态法务页中英 | `web/` privacy/terms/disclaimer 双语或独立 `/en/` 路径 |
+| 静态法务页中英 | ✅ `public/*-en.html` + 设置/注册链随语言切换 |
 | 语气卡片 UI | 去掉 `substring(0,20)` 截断，改用完整 `tone.desc` 键 |
 | 对话页内容区 | 小屏下验证固定底栏不遮挡最后一条消息 |
 | 市场 UGC | 引导用户分享场景；运营位推荐模板 |

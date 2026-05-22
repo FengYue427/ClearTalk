@@ -11,6 +11,7 @@ import { isOnline, downloadFile, events } from '../../core/utils.js';
 import { showToast, showConfirm, showActionSheet } from '../components/index.js';
 import { navigateTo } from './router.js';
 import { t, setLanguage } from '../../core/i18n.js';
+import { getLegalPageUrl } from '../../core/legal-urls.js';
 import { PROXY_AI_MODELS, DEFAULT_SETTINGS } from '../../core/config.js';
 import { QuotaService } from '../../services/quota-service.js';
 
@@ -397,7 +398,7 @@ function renderGroup(container, group) {
       case 'link':
         const link = document.createElement('a');
         link.className = 'settings-link';
-        link.href = item.url;
+        link.href = typeof item.url === 'function' ? item.url() : getLegalPageUrl(item.url);
         link.innerHTML = `
           <span>></span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

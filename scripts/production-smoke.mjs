@@ -5,6 +5,10 @@
 const API = process.env.SMOKE_API_URL || 'https://cleartalk-cu84.onrender.com';
 const WEB = process.env.SMOKE_WEB_URL || 'https://clear-talk-five.vercel.app';
 const ORIGIN = WEB;
+const FETCH_HEADERS = {
+  'User-Agent': 'ClearTalk-launch-smoke/1.0',
+  Accept: 'text/html,application/javascript,*/*'
+};
 
 let failed = 0;
 
@@ -81,12 +85,14 @@ async function main() {
     fail('WEB fetch', e.message);
   }
 
-  try {
-    const pr = await fetch(`${WEB}/privacy.html`);
-    if (pr.ok) ok('/privacy.html accessible');
-    else fail('/privacy.html', String(pr.status));
-  } catch (e) {
-    fail('/privacy.html', e.message);
+  for (const path of ['/privacy.html', '/privacy-en.html', '/terms-en.html', '/disclaimer-en.html']) {
+    try {
+      const r = await fetch(`${WEB}${path}`);
+      if (r.ok) ok(`${path} accessible`);
+      else fail(path, String(r.status));
+    } catch (e) {
+      fail(path, e.message);
+    }
   }
 
   console.log(failed ? `\n[production-smoke] ${failed} failed\n` : '\n[production-smoke] All P0 automated checks passed\n');

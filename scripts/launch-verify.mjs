@@ -42,8 +42,11 @@ console.log('1. 静态与配置');
 [
   'vercel.json',
   'public/privacy.html',
+  'public/privacy-en.html',
   'public/disclaimer.html',
+  'public/disclaimer-en.html',
   'public/terms.html',
+  'public/terms-en.html',
   'public/robots.txt',
   'public/sitemap.xml',
   'public/admin.html',

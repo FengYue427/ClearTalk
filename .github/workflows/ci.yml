@@ -40,6 +40,20 @@ jobs:
       - name: Launch preflight
         run: npm run launch:verify
 
+  production-smoke:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Production P0 smoke
+        run: npm run smoke:production
+        continue-on-error: true
+
   e2e:
     runs-on: ubuntu-latest
     steps:
