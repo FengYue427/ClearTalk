@@ -38,7 +38,9 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm ci --prefix backend
 
       - name: Launch preflight
         run: npm run launch:verify

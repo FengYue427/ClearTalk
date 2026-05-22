@@ -27,24 +27,47 @@ function ok(msg) {
 function fail(msg) {
   console.error(`  ✗ ${msg}`);
   process.exitCode = 1;
+  return false;
 }
 
 function checkFile(rel) {
   const p = path.join(root, rel);
-  if (!fs.existsSync(p)) fail(`缺少文件: ${rel}`);
+  if (!fs.existsSync(p)) {
+    fail(`缺少文件: ${rel}`);
+    return;
+  }
   ok(rel);
 }
 
 console.log('\n[launch:verify] ClearTalk 上市预检\n');
 
-if (!fs.existsSync(path.join(root, 'node_modules', 'vite'))) {
-  console.log('安装依赖 (npm ci)…');
-  const ci = run('npm', ['ci']);
-  if (ci.status !== 0) {
-    console.error(ci.stderr || ci.stdout);
-    fail('npm ci 失败，请先在本机或 CI 中安装依赖');
+function ensureDeps() {
+  if (!fs.existsSync(path.join(root, 'node_modules', 'vite'))) {
+    console.log('安装 Web 依赖 (npm ci)…');
+    const ci = run('npm', ['ci']);
+    if (ci.status !== 0) {
+      console.error(ci.stderr || ci.stdout);
+      fail('npm ci 失败，请先在本机或 CI 中安装依赖');
+      return false;
+    }
+    ok('npm ci (root)');
   }
-  ok('npm ci');
+  const backendNm = path.join(root, 'backend', 'node_modules', 'express');
+  if (!fs.existsSync(backendNm)) {
+    console.log('安装 API 依赖 (backend npm ci)…');
+    const ci = run('npm', ['ci'], { cwd: path.join(root, 'backend') });
+    if (ci.status !== 0) {
+      console.error(ci.stderr || ci.stdout);
+      fail('backend npm ci 失败');
+      return false;
+    }
+    ok('npm ci (backend)');
+  }
+  return true;
+}
+
+if (!ensureDeps()) {
+  process.exit(process.exitCode || 1);
 }
 
 // 1. 关键文件
@@ -68,44 +91,68 @@ console.log('1. 静态与配置');
 const scenes = JSON.parse(
   fs.readFileSync(path.join(root, 'assets/scenes/builtin.json'), 'utf8')
 );
-if (scenes.length < 35) fail(`场景数 ${scenes.length} < 35`);
-ok(`${scenes.length} 内置场景`);
+if (scenes.length < 35) {
+  fail(`场景数 ${scenes.length} < 35`);
+} else {
+  ok(`${scenes.length} 内置场景`);
+}
 
 const vercel = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
-if (vercel.outputDirectory !== 'dist') fail('vercel.json outputDirectory 应为 dist');
-ok('vercel.json → dist');
+if (vercel.outputDirectory !== 'dist') {
+  fail('vercel.json outputDirectory 应为 dist');
+} else {
+  ok('vercel.json → dist');
+}
 
 // 2. 构建与测试
 console.log('\n2. 构建与单元测试');
 let r = run('npm', ['run', 'scenes:build']);
-if (r.status !== 0) fail('scenes:build 失败');
-ok('scenes:build');
+if (r.status !== 0) {
+  fail('scenes:build 失败');
+} else {
+  ok('scenes:build');
+}
 
 r = run('npm', ['run', 'build']);
 if (r.status !== 0) {
   console.error(r.stderr || r.stdout);
   fail('npm run build 失败');
+} else {
+  ok('npm run build');
 }
-ok('npm run build');
 
-if (!fs.existsSync(path.join(root, 'dist/index.html'))) fail('dist/index.html 不存在');
-ok('dist/index.html');
+if (!fs.existsSync(path.join(root, 'dist/index.html'))) {
+  fail('dist/index.html 不存在');
+} else {
+  ok('dist/index.html');
+}
 
 r = run('npm', ['test']);
-if (r.status !== 0) fail('npm test 失败');
-ok('npm test');
+if (r.status !== 0) {
+  fail('npm test 失败');
+} else {
+  ok('npm test');
+}
 
 // 3. 生产守卫
 console.log('\n3. 生产配置守卫');
 r = run('npm', ['run', 'check:production']);
-if (r.status !== 0) fail('check:production 失败');
-ok('check:production');
+if (r.status !== 0) {
+  if (r.stderr) console.error(r.stderr);
+  if (r.stdout) console.error(r.stdout);
+  fail('check:production 失败');
+} else {
+  ok('check:production');
+}
 
 // 4. 后端语法
 console.log('\n4. 后端');
 r = run('node', ['--check', 'src/server.js'], { cwd: path.join(root, 'backend') });
-if (r.status !== 0) fail('backend server.js 语法错误');
-ok('backend syntax');
+if (r.status !== 0) {
+  fail('backend server.js 语法错误');
+} else {
+  ok('backend syntax');
+}
 
 console.log('\n[launch:verify] 预检完成' + (process.exitCode ? '（有失败项）' : ' — 全部通过') + '\n');
 console.log('下一步: 按 docs/LAUNCH_RUNBOOK.md 部署 Render + Vercel\n');

@@ -58,7 +58,11 @@ async function main() {
   }, 3000);
 
   if (good.code === 1) {
-    console.error('[check] 失败：合法配置不应 exit 1', good.stderr);
+    console.error('[check] 失败：合法配置不应 exit 1', good.stderr, good.stdout);
+    process.exit(1);
+  }
+  if (good.code !== 0 && good.code !== null) {
+    console.error('[check] 失败：启动异常退出', good.code, good.stderr, good.stdout);
     process.exit(1);
   }
   console.log('[check] ✓ 合法 JWT 可通过启动校验');
