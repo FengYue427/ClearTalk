@@ -1,0 +1,25 @@
+# Render Blueprint（仓库根目录）— 部署 API 时请使用 backend 子目录
+# 在 Dashboard 创建 Web Service 时也可手动设 Root Directory = backend
+services:
+  - type: web
+    name: cleartalk-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health/ready
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        value: https://clear-talk.vercel.app,http://localhost:5173
+      - key: SQLITE_PATH
+        value: /opt/render/project/src/data/cleartalk.db
+      - key: FRONTEND_URL
+        value: https://clear-talk.vercel.app
+    disk:
+      name: cleartalk-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1

@@ -36,7 +36,7 @@
 
 | 变量 | 值 |
 |------|-----|
-| `VITE_API_URL` | `https://cleartalk-api.onrender.com`（或你的 Render API 地址） |
+| `VITE_API_URL` | 你的 Render API 地址，例如 `https://cleartalk-cu84.onrender.com` |
 
 ## 重新部署
 

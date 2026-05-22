@@ -5,6 +5,24 @@
 
 ---
 
+## ⚠️ 常见误配（你当前截图）
+
+若 Build Logs 里是 **`npm install; npm run build`**（在装 Vite 前端），说明 **Root Directory 没设为 `backend`**，API 会部署失败或跑错项目。
+
+**请立刻在 Render → Settings 改为：**
+
+| 项 | 正确值 | 错误示例 |
+|----|--------|----------|
+| **Root Directory** | `backend` | （留空 = 仓库根目录） |
+| **Build Command** | `npm install` | `npm install; npm run build` |
+| **Start Command** | `npm start` | 其它 |
+| **Health Check Path** | `/health/ready` | |
+
+改完后 **Manual Deploy → Deploy latest commit**。  
+你的 API 地址示例：`https://cleartalk-cu84.onrender.com`（以 Render 显示的 URL 为准）。
+
+---
+
 ## 第一步：部署 Render API（约 20 分钟）
 
 1. 打开 [https://dashboard.render.com](https://dashboard.render.com) → **New +** → **Web Service**
@@ -13,10 +31,10 @@
 
 | 项 | 值 |
 |----|-----|
-| Name | `cleartalk-api`（或自定，记下域名） |
-| Root Directory | `backend` |
+| Name | `cleartalk-api`（或 `ClearTalk`，记下域名） |
+| **Root Directory** | **`backend`**（必填） |
 | Runtime | Node |
-| Build Command | `npm install` |
+| Build Command | `npm install`（仅安装后端依赖，不要 `npm run build`） |
 | Start Command | `npm start` |
 | Health Check Path | `/health/ready` |
 
@@ -54,7 +72,9 @@
    `https://<你的服务名>.onrender.com/health/ready`  
    应返回 JSON 且 `"status":"ok"`（不是 404/503）。
 
-记下 API 根地址，例如：`https://cleartalk-api.onrender.com`
+记下 API 根地址，例如：`https://cleartalk-cu84.onrender.com`（你当前服务）
+
+**Free 计划**：闲置后会休眠，首次请求可能等 50 秒，属正常现象。
 
 ---
 
@@ -65,7 +85,7 @@
 
 | Name | Value |
 |------|--------|
-| `VITE_API_URL` | `https://<你的-render>.onrender.com`（无末尾斜杠） |
+| `VITE_API_URL` | `https://cleartalk-cu84.onrender.com`（换成你 Render 显示的 URL，无末尾 `/`） |
 
 3. **Settings → Build** 确认：
    - Build Command: `npm run vercel-build` 或 Use `vercel.json`
