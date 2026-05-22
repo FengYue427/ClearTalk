@@ -10,7 +10,7 @@ const PRODUCTION_API_URL =
   process.env.VITE_API_URL?.replace(/\/$/, '') ||
   'https://cleartalk-cu84.onrender.com';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   root: 'src',
   publicDir: path.resolve(__dirname, 'public'),
   build: {
@@ -80,9 +80,9 @@ export default defineConfig({
   },
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
-    __DEV__: JSON.stringify(process.env.NODE_ENV === 'development'),
+    __DEV__: JSON.stringify(mode !== 'production'),
     'import.meta.env.VITE_API_URL': JSON.stringify(
-      process.env.NODE_ENV === 'production' ? PRODUCTION_API_URL : (process.env.VITE_API_URL || '')
+      mode === 'production' ? PRODUCTION_API_URL : (process.env.VITE_API_URL || '')
     )
   }
-});
+}));
