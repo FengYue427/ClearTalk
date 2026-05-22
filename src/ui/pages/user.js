@@ -19,6 +19,20 @@ let countdownTimer = null;
 // 语言变化取消订阅函数
 let userLanguageUnsubscribe = null;
 
+function getPasswordResetParams() {
+  const search = new URLSearchParams(window.location.search);
+  if (search.get('token') && search.get('email')) {
+    return { token: search.get('token'), email: search.get('email') };
+  }
+  const hash = window.location.hash || '';
+  const qIndex = hash.indexOf('?');
+  if (qIndex >= 0) {
+    const hashParams = new URLSearchParams(hash.slice(qIndex + 1));
+    return { token: hashParams.get('token'), email: hashParams.get('email') };
+  }
+  return { token: null, email: null };
+}
+
 // ========== 初始化 ==========
 
 export function initUser() {
@@ -33,10 +47,8 @@ export function initUser() {
 
   page.innerHTML = '';
   
-  // 检查是否是重置密码页面
-  const urlParams = new URLSearchParams(window.location.search);
-  const resetToken = urlParams.get('token');
-  const resetEmail = urlParams.get('email');
+  // 检查是否是重置密码页面（支持 /?token= 与 #/user?token=）
+  const { token: resetToken, email: resetEmail } = getPasswordResetParams();
   
   if (resetToken && resetEmail) {
     renderResetPasswordPage(page, resetEmail, resetToken);

@@ -128,6 +128,42 @@ const repo = {
     }
   },
 
+  updateUserPasswordById(userId, hashedPassword) {
+    const u = db.data.users.find((x) => x.id === userId);
+    if (u) {
+      u.password = hashedPassword;
+      u.updatedAt = new Date().toISOString();
+      writeFileSyncSafe();
+    }
+  },
+
+  deleteUserAccount(userId) {
+    const user = db.data.users.find((u) => u.id === userId);
+    db.data.userData = (db.data.userData || []).filter((d) => d.userId !== userId);
+    db.data.scenes = (db.data.scenes || []).filter((s) => s.userId !== userId);
+    db.data.likes = (db.data.likes || []).filter((l) => l.userId !== userId);
+    if (user?.email) {
+      db.data.verifications = (db.data.verifications || []).filter((v) => v.email !== user.email);
+      db.data.passwordResets = (db.data.passwordResets || []).filter((r) => r.email !== user.email);
+    }
+    db.data.users = db.data.users.filter((u) => u.id !== userId);
+    writeFileSyncSafe();
+  },
+
+  clearUserSyncData(userId) {
+    db.data.userData = (db.data.userData || []).filter((d) => d.userId !== userId);
+    writeFileSyncSafe();
+  },
+
+  getPhrases(userId) {
+    const row = (db.data.userData || []).find((d) => d.userId === userId && d.dataType === 'phrases');
+    return row?.data || [];
+  },
+
+  setPhrases(userId, phrases) {
+    repo.upsertUserData(userId, 'phrases', phrases, new Date().toISOString());
+  },
+
   upsertUserData(userId, dataType, data, updatedAt) {
     const existing = db.data.userData.find((d) => d.userId === userId && d.dataType === dataType);
     if (existing) {

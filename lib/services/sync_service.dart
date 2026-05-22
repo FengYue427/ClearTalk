@@ -11,7 +11,10 @@ class SyncService {
   SyncService._internal();
 
   final Dio _dio = Dio(BaseOptions(
-    baseUrl: 'https://your-backend-url.com', // TODO: 替换为实际后端地址
+    baseUrl: const String.fromEnvironment(
+      'CLEARTALK_API_URL',
+      defaultValue: '',
+    ),
     connectTimeout: const Duration(seconds: 30),
     receiveTimeout: const Duration(seconds: 30),
     headers: {'Content-Type': 'application/json'},
@@ -34,9 +37,14 @@ class SyncService {
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
 
-    final savedBaseUrl = _prefs?.getString(_baseUrlPrefKey);
-    if (savedBaseUrl != null && savedBaseUrl.trim().isNotEmpty) {
-      _dio.options.baseUrl = savedBaseUrl.trim();
+    const envUrl = String.fromEnvironment('CLEARTALK_API_URL', defaultValue: '');
+    if (envUrl.trim().isNotEmpty) {
+      _dio.options.baseUrl = envUrl.trim();
+    } else {
+      final savedBaseUrl = _prefs?.getString(_baseUrlPrefKey);
+      if (savedBaseUrl != null && savedBaseUrl.trim().isNotEmpty) {
+        _dio.options.baseUrl = savedBaseUrl.trim();
+      }
     }
 
     _lastSyncTime = _prefs?.getInt('last_sync_time') != null

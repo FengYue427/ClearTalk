@@ -346,6 +346,41 @@ const repo = {
     );
   },
 
+  updateUserPasswordById(userId, hashedPassword) {
+    db.prepare('UPDATE users SET password = ?, updated_at = ? WHERE id = ?').run(
+      hashedPassword,
+      new Date().toISOString(),
+      userId
+    );
+  },
+
+  deleteUserAccount(userId) {
+    const user = db.prepare('SELECT email FROM users WHERE id = ?').get(userId);
+    db.prepare('DELETE FROM user_data WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM scene_likes WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM scenes WHERE user_id = ?').run(userId);
+    if (user?.email) {
+      db.prepare('DELETE FROM verifications WHERE email = ?').run(user.email);
+      db.prepare('DELETE FROM password_resets WHERE email = ?').run(user.email);
+    }
+    db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+  },
+
+  clearUserSyncData(userId) {
+    db.prepare('DELETE FROM user_data WHERE user_id = ?').run(userId);
+  },
+
+  getPhrases(userId) {
+    const row = db.prepare(
+      "SELECT data FROM user_data WHERE user_id = ? AND data_type = 'phrases'"
+    ).get(userId);
+    return row ? parseJson(row.data, []) : [];
+  },
+
+  setPhrases(userId, phrases) {
+    repo.upsertUserData(userId, 'phrases', phrases, new Date().toISOString());
+  },
+
   // --- Sync ---
   upsertUserData(userId, dataType, data, updatedAt) {
     db.prepare(`

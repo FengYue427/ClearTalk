@@ -4,6 +4,8 @@
 
 ---
 
+> **S7 逐步操作（Render/Vercel/SMTP）**：见 [`S7_OPERATOR_GUIDE.md`](S7_OPERATOR_GUIDE.md)
+
 ## 0. 上线前本地预检
 
 ```bash

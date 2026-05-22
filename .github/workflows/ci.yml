@@ -27,6 +27,19 @@ jobs:
         run: npm run lint
         continue-on-error: true
 
+  launch-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Launch preflight
+        run: npm run launch:verify
+
   e2e:
     runs-on: ubuntu-latest
     steps:

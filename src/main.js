@@ -56,6 +56,13 @@ async function initApp() {
   
   // 初始化路由
   initRouter();
+
+  // 密码重置邮件链接：/?token=...&email=... → 用户页
+  const resetToken = new URLSearchParams(window.location.search).get('token');
+  const resetEmail = new URLSearchParams(window.location.search).get('email');
+  if (resetToken && resetEmail) {
+    navigateTo('user', false);
+  }
   
   // 设置全局事件
   setupGlobalEvents();

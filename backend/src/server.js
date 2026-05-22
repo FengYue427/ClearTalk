@@ -54,6 +54,19 @@ function initEmailService() {
   }
 }
 
+function getFrontendBase() {
+  return (process.env.FRONTEND_URL || 'http://localhost:8080').replace(/\/$/, '');
+}
+
+function buildPasswordResetUrl(token, email) {
+  return `${getFrontendBase()}/?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+}
+
+/** 生产环境未配置 SMTP 时不向客户端泄露验证码/重置链接 */
+function emailExtrasAllowed() {
+  return process.env.NODE_ENV !== 'production' || process.env.ALLOW_DEV_EMAIL_PREVIEW === '1';
+}
+
 // 发送邮件
 async function sendEmail(to, subject, html) {
   if (!transporter) {
@@ -316,8 +329,12 @@ app.post('/api/auth/send-code', async (req, res) => {
     const emailResult = await sendEmail(email, subject, html);
 
     if (emailResult.simulated) {
-      // 模拟模式下返回验证码（仅用于测试）
-      res.json({ success: true, message: '验证码已发送（模拟模式）', code });
+      if (!emailExtrasAllowed()) {
+        return res.status(503).json({
+          error: '邮件服务暂未开通，请使用密码登录或联系管理员配置 SMTP'
+        });
+      }
+      res.json({ success: true, message: '验证码已发送（开发模式）', code });
     } else if (emailResult.success) {
       res.json({ success: true, message: '验证码已发送到您的邮箱' });
     } else {
@@ -400,7 +417,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     });
 
     // 发送重置邮件
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:8080'}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+    const resetUrl = buildPasswordResetUrl(token, email);
     const subject = 'ClearTalk 密码重置';
     const html = `
       <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
@@ -416,7 +433,12 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const emailResult = await sendEmail(email, subject, html);
 
     if (emailResult.simulated) {
-      res.json({ success: true, message: '重置链接已发送（模拟模式）', resetUrl, token });
+      if (!emailExtrasAllowed()) {
+        return res.status(503).json({
+          error: '邮件服务暂未开通，无法发送重置邮件，请联系管理员'
+        });
+      }
+      res.json({ success: true, message: '重置链接已发送（开发模式）', resetUrl, token });
     } else {
       res.json({ success: true, message: '重置链接已发送到您的邮箱' });
     }
@@ -500,6 +522,88 @@ app.put('/api/user/profile', authenticateToken, async (req, res) => {
   res.json({ success: true, user: { id: userId, username, email } });
 });
 
+app.put('/api/user/password', authenticateToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword || String(newPassword).length < 6) {
+      return res.status(400).json({ error: '请提供当前密码，且新密码至少 6 位' });
+    }
+    const user = DB.findUserById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ error: '用户不存在' });
+    }
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) {
+      return res.status(401).json({ error: '当前密码不正确' });
+    }
+    const hashed = await bcrypt.hash(newPassword, 10);
+    DB.updateUserPasswordById(user.id, hashed);
+    res.json({ success: true, message: '密码已更新' });
+  } catch (error) {
+    console.error('[User] 修改密码失败:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
+app.post('/api/user/delete', authenticateToken, async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password) {
+      return res.status(400).json({ error: '请提供密码以确认删除账号' });
+    }
+    const user = DB.findUserById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ error: '用户不存在' });
+    }
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return res.status(401).json({ error: '密码不正确' });
+    }
+    DB.deleteUserAccount(user.id);
+    res.json({ success: true, message: '账号已删除' });
+  } catch (error) {
+    console.error('[User] 删除账号失败:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
+app.post('/api/user/phrases', authenticateToken, (req, res) => {
+  try {
+    const { phrase } = req.body;
+    if (!phrase?.text || !String(phrase.text).trim()) {
+      return res.status(400).json({ error: '短语内容不能为空' });
+    }
+    const userId = req.user.userId;
+    const phrases = DB.getPhrases(userId);
+    const entry = {
+      id: phrase.id || `ph_${Date.now()}`,
+      text: String(phrase.text).trim(),
+      createdAt: phrase.createdAt || new Date().toISOString()
+    };
+    if (phrases.some((p) => p.text === entry.text)) {
+      return res.status(400).json({ error: '该短语已存在' });
+    }
+    phrases.push(entry);
+    DB.setPhrases(userId, phrases);
+    res.json({ success: true, phrase: entry });
+  } catch (error) {
+    console.error('[User] 添加快捷短语失败:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
+app.delete('/api/user/phrases/:id', authenticateToken, (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const phrases = DB.getPhrases(userId).filter((p) => p.id !== req.params.id);
+    DB.setPhrases(userId, phrases);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[User] 删除快捷短语失败:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
 // ============== 云同步 API ==============
 
 app.post('/api/sync/upload', authenticateToken, async (req, res) => {
@@ -540,6 +644,16 @@ app.get('/api/sync/download', authenticateToken, (req, res) => {
   });
 
   res.json(result);
+});
+
+app.delete('/api/sync/clear', authenticateToken, (req, res) => {
+  try {
+    DB.clearUserSyncData(req.user.userId);
+    res.json({ success: true, message: '云端数据已清除' });
+  } catch (error) {
+    console.error('[Sync] 清除云端数据失败:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
 });
 
 // ============== 场景市场 API ==============

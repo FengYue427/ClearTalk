@@ -98,11 +98,14 @@
 | D4 | 填 `LAUNCH_SIGNOFF` B 表 | 运维签收 |
 | D5 | 填 C 表（含英文切换） | 产品签收 |
 
-**S7 代码任务（可选，建议本仓库内完成）：**
+**S7 代码任务（已完成 `main` 推送后）：**
 
-1. 实现缺失的 4 组用户 API **或** 在前端标注「即将上线」并禁用调用  
-2. 生产环境禁止 `send-code` / `forgot-password` 回传敏感字段（`NODE_ENV=production && !transporter`）  
-3. CI 增加 `npm run launch:verify` job  
+1. ✅ 用户 API：`password` / `delete` / `phrases` / `sync/clear`（`backend/src/server.js`）  
+2. ✅ 生产未配 SMTP 时不回传 `code`/`resetUrl`（503 提示配置邮箱）  
+3. ✅ CI `launch:verify` job  
+4. ✅ 重置链接 `FRONTEND_URL/?token=&email=` + 前端自动进用户页  
+5. ✅ Flutter `--dart-define=CLEARTALK_API_URL=...`  
+6. 🚀 **你方操作**：见 [`docs/S7_OPERATOR_GUIDE.md`](S7_OPERATOR_GUIDE.md)  
 
 ### S8（第 2 周）：运营就绪
 
