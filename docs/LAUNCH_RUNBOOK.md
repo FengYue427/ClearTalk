@@ -13,9 +13,10 @@
 cd /path/to/APP
 npm ci
 npm run launch:verify
+npm run smoke:production
 ```
 
-通过标准：构建成功、单元测试通过、35 场景、合规页存在、生产 JWT 守卫通过。
+通过标准：构建成功、单元测试通过、35 场景、合规页存在、生产 JWT 守卫通过；`smoke:production` 检查 Render/Vercel 连通与注册 CORS。
 
 ---
 

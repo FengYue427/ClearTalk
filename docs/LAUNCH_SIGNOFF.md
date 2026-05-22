@@ -1,7 +1,8 @@
 # ClearTalk 上市签收单（最终）
 
 > 用途：对外「真正上市」前最后一页勾选。  
-> 代码基线：`main` @ `985a2219` 及之后（Vercel Vite 部署已 Ready）。
+> 代码基线：`main` @ `121971a9` 及之后（严格双语 i18n + launch plan）。  
+> 自动验证记录：[`P0_VERIFICATION_LOG.md`](P0_VERIFICATION_LOG.md)
 
 ---
 
@@ -11,7 +12,7 @@
 npm run launch:verify
 ```
 
-- [ ] 全部 ✓（构建、35 场景、合规页、生产 JWT 守卫、后端语法）
+- [x] 全部 ✓（2026-05-22 `npm run launch:verify` 全绿）
 
 ---
 
@@ -20,13 +21,13 @@ npm run launch:verify
 | # | 检查项 | 通过 |
 |---|--------|------|
 | B1 | Vercel 最新部署 **Ready**，构建命令为 `npm run build`（非 Flutter） | ☐ |
-| B2 | 访问生产 URL：首页有 **粘贴分析 + 35 场景** | ☐ |
-| B3 | `VITE_API_URL` 指向正确 Render 服务 | ☐ |
-| B4 | Render `/health/ready` → `status: ok` | ☐ |
+| B2 | 访问生产 URL：首页有 **粘贴分析 + 35 场景** | ☑ |
+| B3 | `VITE_API_URL` 指向正确 Render 服务 | ☑ |
+| B4 | Render `/health/ready` → `status: ok` | ☑ |
 | B5 | `JWT_SECRET` 非默认值 | ☐ |
 | B6 | `ALLOWED_ORIGINS` 含生产前端域名 | ☐ |
 | B7 | `SQLITE_PATH` + Disk 已挂载（用户数据不丢） | ☐ |
-| B8 | 至少一个 AI Key（DeepSeek/OpenAI/Qwen） | ☐ |
+| B8 | 至少一个 AI Key（DeepSeek/OpenAI/Qwen） | ☑ |
 | B9 | `FEEDBACK_ADMIN_KEY` 已设；`/admin.html` 可查看统计 | ☐ |
 | B10 | 生产已配 SMTP，或接受内测期模拟验证码 | ☐ |
 
@@ -43,7 +44,7 @@ npm run launch:verify
 | C5 | 场景市场可打开 | ☐ |
 | C6 | `#/scene/leave_request` 深链 | ☐ |
 | C7 | 注册页链到 privacy / terms / disclaimer | ☐ |
-| C8 | `/privacy.html` 可访问 | ☐ |
+| C8 | `/privacy.html` 可访问 | ☑ |
 
 ---
 

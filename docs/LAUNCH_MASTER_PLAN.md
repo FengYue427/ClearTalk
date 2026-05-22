@@ -135,4 +135,6 @@ gantt
 3. 反馈率、5xx（有 Sentry 后）  
 4. 下周只选 **1 个** P0/P1 项，避免并行铺功能  
 
-**下一动作（建议今天）**：在英文模式下走完 `package_issue` 场景生成 → 推送已含 i18n 的 `main` → Vercel/Render 自动部署 → 强刷验收 → 勾 §三 P0 表。
+**下一动作（建议今天）**：运行 `npm run smoke:production`（已通过 2026-05-22）→ 浏览器英文模式生成验收 → 配 SMTP 进入 B 档。
+
+**自动验证**：`npm run smoke:production` · 日志 [`P0_VERIFICATION_LOG.md`](P0_VERIFICATION_LOG.md)
