@@ -1364,7 +1364,11 @@ export function initI18n() {
 // 获取翻译文本
 export function t(key, params = {}) {
   const lang = state.language || currentLanguage;
-  let text = translations[lang]?.[key] || translations['zh']?.[key] || key;
+  let text = translations[lang]?.[key];
+  // 英文模式禁止回落到中文（否则场景名/描述会显示中文）
+  if (text === undefined) {
+    text = lang === 'zh' ? (translations.zh?.[key] ?? key) : key;
+  }
   
   // 替换参数 {n}, {name} 等
   Object.keys(params).forEach(param => {
