@@ -18,10 +18,12 @@ export default defineConfig({
     locale: 'zh-CN'
   },
   webServer: {
-    command: `npm run preview -- --host ${HOST} --port ${PORT}`,
+    command: `npm run preview -- --host ${HOST} --port ${PORT} --strictPort`,
     url: `http://${HOST}:${PORT}`,
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000
+    timeout: 120_000,
+    stdout: process.env.CI ? 'pipe' : 'ignore',
+    stderr: process.env.CI ? 'pipe' : 'ignore'
   },
   projects: [
     {

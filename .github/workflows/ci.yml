@@ -71,6 +71,7 @@ jobs:
         run: |
           npm run scenes:build
           npm run build
+          test -f dist/index.html
 
       - name: Install Playwright Chromium
         run: npx playwright install chromium --with-deps
