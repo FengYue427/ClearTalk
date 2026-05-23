@@ -815,19 +815,22 @@ async function handlePasswordLogin(e) {
 async function handleSendCode() {
   const emailInput = document.querySelector('#code-email');
   const email = emailInput?.value.trim();
+  const authRoot = emailInput?.closest('.auth-content') || document;
   
   if (!email || !isValidEmail(email)) {
-    showAuthError(t('auth.error.invalid.email'));
+    showAuthError(t('auth.error.invalid.email'), authRoot);
     return;
   }
   
-  const btn = document.querySelector('#btn-send-code');
+  const btn = authRoot.querySelector('#btn-send-code');
+  if (!btn) return;
   btn.disabled = true;
+  hideAuthError(authRoot);
   
   const result = await UserService.sendVerificationCode(email, 'login');
   
   if (result.success) {
-    showToast('✅ ' + t('forgot.success'));
+    showToast('✅ ' + (result.message || t('auth.code.sent')));
     if (result.code) {
       console.log('Verification code:', result.code);
     }
@@ -844,7 +847,7 @@ async function handleSendCode() {
       }
     }, 1000);
   } else {
-    showAuthError('❌ ' + result.error);
+    showAuthError('❌ ' + (result.error || t('auth.error.send.code.failed')), authRoot);
     btn.disabled = false;
   }
 }
@@ -958,20 +961,20 @@ async function handleForgotPassword(e) {
 
 // ========== 工具函数 ==========
 
-function showAuthError(message) {
-  const errorEl = document.querySelector('#auth-error');
-  const errorTextEl = document.querySelector('#auth-error-text');
+function showAuthError(message, root = document) {
+  const errorEl = root.querySelector('#auth-error');
+  const errorTextEl = root.querySelector('#auth-error-text');
   if (errorEl && errorTextEl) {
     errorTextEl.textContent = message;
     errorEl.style.display = 'flex';
     setTimeout(() => {
       errorEl.style.display = 'none';
-    }, 5000);
+    }, 8000);
   }
 }
 
-function hideAuthError() {
-  const errorEl = document.querySelector('#auth-error');
+function hideAuthError(root = document) {
+  const errorEl = root.querySelector('#auth-error');
   if (errorEl) errorEl.style.display = 'none';
 }
 

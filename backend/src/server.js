@@ -31,24 +31,63 @@ function ipHash(req) {
 
 // ============== 邮箱服务 ==============
 let transporter = null;
+/** SMTP verify() 通过后才为 true（仅表示能连上服务器，不等于每封都能送达） */
+let smtpVerified = false;
+
+function buildSmtpTransport() {
+  const emailHost = process.env.EMAIL_HOST;
+  const emailPort = parseInt(process.env.EMAIL_PORT, 10) || 587;
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
+  const secure = emailPort === 465;
+
+  return nodemailer.createTransport({
+    host: emailHost,
+    port: emailPort,
+    secure,
+    auth: {
+      user: emailUser,
+      pass: emailPass
+    },
+    connectionTimeout: 20000,
+    greetingTimeout: 20000,
+    socketTimeout: 20000,
+    ...(secure
+      ? { tls: { servername: emailHost, minVersion: 'TLSv1.2' } }
+      : { requireTLS: true, tls: { servername: emailHost, minVersion: 'TLSv1.2' } })
+  });
+}
+
+/** 163 等要求发件人地址与登录邮箱一致 */
+function getMailFrom() {
+  const user = (process.env.EMAIL_USER || '').trim();
+  const from = (process.env.EMAIL_FROM || user).trim();
+  if (!user) return from;
+  if (from.includes(user)) return from;
+  return `"ClearTalk" <${user}>`;
+}
 
 function initEmailService() {
   const emailHost = process.env.EMAIL_HOST;
-  const emailPort = process.env.EMAIL_PORT;
   const emailUser = process.env.EMAIL_USER;
   const emailPass = process.env.EMAIL_PASS;
 
   if (emailHost && emailUser && emailPass) {
-    transporter = nodemailer.createTransport({
-      host: emailHost,
-      port: parseInt(emailPort) || 587,
-      secure: parseInt(emailPort) === 465,
-      auth: {
-        user: emailUser,
-        pass: emailPass
-      }
-    });
-    console.log('[Email] 邮箱服务已配置');
+    transporter = buildSmtpTransport();
+    console.log(`[Email] 邮箱服务已配置 (${emailHost}:${process.env.EMAIL_PORT || 587})`);
+    transporter
+      .verify()
+      .then(() => {
+        smtpVerified = true;
+        console.log('[Email] SMTP 连接验证成功');
+      })
+      .catch((err) => {
+        smtpVerified = false;
+        console.error('[Email] SMTP 连接验证失败:', err.message);
+        if (err.code) console.error('[Email]   code:', err.code);
+        if (err.response) console.error('[Email]   response:', err.response);
+        console.error('[Email]   请检查 163 授权码、EMAIL_PORT(465/587)，见 docs/SMTP_163_SETUP.md');
+      });
   } else {
     console.log('[Email] 邮箱服务未配置，将使用模拟模式');
   }
@@ -75,17 +114,22 @@ async function sendEmail(to, subject, html) {
   }
 
   try {
+    const from = getMailFrom();
+    const envelopeFrom = (process.env.EMAIL_USER || '').trim() || from;
     const result = await transporter.sendMail({
-      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      from,
       to,
       subject,
-      html
+      html,
+      envelope: { from: envelopeFrom, to }
     });
     console.log(`[Email] 邮件已发送到 ${to}: ${result.messageId}`);
     return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error('[Email] 发送失败:', error);
-    return { success: false, error: error.message };
+    console.error('[Email] 发送失败:', error.message);
+    if (error.code) console.error('[Email]   code:', error.code);
+    if (error.response) console.error('[Email]   response:', error.response);
+    return { success: false, error: error.message, code: error.code };
   }
 }
 
@@ -338,7 +382,10 @@ app.post('/api/auth/send-code', async (req, res) => {
     } else if (emailResult.success) {
       res.json({ success: true, message: '验证码已发送到您的邮箱' });
     } else {
-      res.status(500).json({ error: '验证码发送失败，请稍后重试' });
+      const hint = emailResult.code === 'EAUTH'
+        ? '邮件认证失败，请检查 163 授权码与 SMTP 是否已开启'
+        : '验证码发送失败，请稍后重试';
+      res.status(500).json({ error: hint });
     }
   } catch (error) {
     console.error('[Auth] 发送验证码失败:', error);
@@ -1020,6 +1067,7 @@ function getHealthPayload() {
     checks: {
       database: DB.getMode?.() || 'sqlite',
       email: !!transporter,
+      emailSmtpVerified: smtpVerified,
       ai,
       jwt: jwtOk,
       corsOrigins: allowedOrigins.length
