@@ -82,7 +82,13 @@ export default defineConfig(({ mode }) => ({
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
     __DEV__: JSON.stringify(mode !== 'production'),
     'import.meta.env.VITE_API_URL': JSON.stringify(
-      mode === 'production' ? PRODUCTION_API_URL : (process.env.VITE_API_URL || '')
+      process.env.VITE_E2E === '1'
+        ? ''
+        : process.env.VITE_API_URL
+          ? String(process.env.VITE_API_URL).replace(/\/$/, '')
+          : mode === 'production'
+            ? PRODUCTION_API_URL
+            : ''
     )
   }
 }));

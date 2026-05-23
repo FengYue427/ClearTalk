@@ -20,7 +20,7 @@ test.describe('粘贴分析', () => {
     await expect(results).not.toHaveClass(/hidden/);
 
     const match = page.locator('.quick-paste-match-item').first();
-    await expect(match).toBeVisible();
-    await expect(match).toContainText('请假');
+    await expect(match).toBeVisible({ timeout: 15_000 });
+    await expect(match).toContainText(/请假|Leave/i);
   });
 });

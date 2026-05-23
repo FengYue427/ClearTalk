@@ -5,12 +5,32 @@ import { api } from './api-client.js';
 import { matchScenesFromText } from './scene-matcher.js';
 import { logger } from '../core/logger.js';
 
+const CLASSIFY_TIMEOUT_MS = 3500;
+
+function classifyWithTimeout(text) {
+  return Promise.race([
+    api.post('/api/ai/classify-paste', { text }),
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('classify_timeout')), CLASSIFY_TIMEOUT_MS);
+    })
+  ]);
+}
+
 export async function analyzePasteText(text, allScenes, limit = 3) {
   const trimmed = String(text || '').trim();
   if (!trimmed) return { matches: [], source: 'empty' };
 
+  // 无 API 基址（E2E / 纯静态预览）直接用本地关键词
+  const apiBase = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || '';
+  if (!String(apiBase).trim()) {
+    return {
+      matches: matchScenesFromText(trimmed, allScenes, limit),
+      source: 'keywords'
+    };
+  }
+
   try {
-    const result = await api.post('/api/ai/classify-paste', { text: trimmed });
+    const result = await classifyWithTimeout(trimmed);
     if (result?.scenes?.length) {
       const matches = result.scenes
         .map((item) => {
