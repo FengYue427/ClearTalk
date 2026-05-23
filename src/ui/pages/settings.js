@@ -11,7 +11,7 @@ import { isOnline, downloadFile, events } from '../../core/utils.js';
 import { showToast, showConfirm, showActionSheet } from '../components/index.js';
 import { navigateTo } from './router.js';
 import { t, setLanguage } from '../../core/i18n.js';
-import { getLegalPageUrl } from '../../core/legal-urls.js';
+import { getLegalPageUrl, getLegalContactMailto } from '../../core/legal-urls.js';
 import { PROXY_AI_MODELS, DEFAULT_SETTINGS } from '../../core/config.js';
 import { QuotaService } from '../../services/quota-service.js';
 
@@ -195,7 +195,7 @@ function getSettingsGroups() {
         key: 'feedback',
         label: t('settings.contact'),
         type: 'action',
-        action: () => window.open('mailto:feedback@cleartalk.app', '_blank')
+        action: () => window.open(getLegalContactMailto(), '_blank')
       }
     ]
   }
@@ -554,7 +554,7 @@ async function testOpenAIConnection(apiKey, provider) {
     },
     body: JSON.stringify({
       model: model,
-      messages: [{ role: 'user', content: '你好，这是一个测试' }],
+      messages: [{ role: 'user', content: t('settings.ai.test.prompt') }],
       max_tokens: 10
     })
   });
@@ -576,7 +576,7 @@ function resetAllData() {
     confirmText: t('dialog.button.delete'),
     onConfirm: () => {
       Storage.clear();
-      showToast(t('toast.deleted') + '，' + t('toast.reloading'));
+      showToast(t('toast.deleted.reload'));
       logger.warn('All data reset');
       
       setTimeout(() => {

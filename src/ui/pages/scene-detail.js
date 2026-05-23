@@ -13,7 +13,7 @@ import { Analytics } from '../../services/analytics-service.js';
 import { QuotaService } from '../../services/quota-service.js';
 import { showToast, showLoading, createButton, createEmptyState, showModal } from '../components/index.js';
 import { navigateTo } from './router.js';
-import { t } from '../../core/i18n.js';
+import { t, translateApiError } from '../../core/i18n.js';
 import { getLegalPageUrl } from '../../core/legal-urls.js';
 import { getSceneName, getSceneDescription, getFieldLabel, getFieldPlaceholder, getSelectOptionLabel } from '../../core/scene-l10n.js';
 import { isVoiceSupported, createVoiceRecognizer, getVoiceLanguage } from '../../services/voice-service.js';
@@ -519,7 +519,7 @@ async function generateText() {
     showToast(t('scene.success'));
   } catch (error) {
     Analytics.track('generate_fail', { sceneId: scene.id, meta: { message: error?.message } });
-    if (error?.message === 'QUOTA_EXCEEDED' || error?.message?.includes('次数已用完')) {
+    if (error?.message === 'QUOTA_EXCEEDED') {
       const q = error.quota;
       showToast(q ? t('quota.exceeded_detail', { used: q.used, limit: q.limit }) : t('quota.exceeded'));
     } else if (error?.message === 'timeout') {
@@ -527,7 +527,8 @@ async function generateText() {
     } else if (navigator.onLine === false) {
       showToast(t('error.network'));
     } else {
-      showToast(t('error.unknown'));
+      const msg = translateApiError(error?.message);
+      showToast(msg && msg !== error?.message ? msg : t('error.unknown'));
     }
     console.error('Generate error:', error);
   } finally {

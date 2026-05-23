@@ -9,7 +9,7 @@ import { logger } from '../../core/logger.js';
 import { triggerHaptic, copyToClipboard, isOnline } from '../../core/utils.js';
 import { showToast, showLoading, createButton, createEmptyState } from '../components/index.js';
 import { navigateTo } from './router.js';
-import { t } from '../../core/i18n.js';
+import { t, getCurrentLanguage } from '../../core/i18n.js';
 
 // 人格配置 - 使用翻译键
 const PERSONALITIES = {
@@ -398,18 +398,26 @@ function generateLocalReply() {
     .find(m => m.role === 'user');
   
   const text = lastUser?.content?.toLowerCase() || '';
-  
-  // 简单关键词匹配
-  if (text.includes('好') || text.includes('ok') || text.includes('可以')) {
+  const en = getCurrentLanguage() === 'en';
+
+  const agree = en
+    ? ['yes', 'ok', 'sure', 'agree', 'fine', 'sounds good']
+    : ['好', 'ok', '可以', '行', '没问题'];
+  const reject = en
+    ? ['no', 'nope', "can't", 'cannot', 'refuse', 'decline']
+    : ['不', '拒绝', '不行', '没法'];
+  const thanks = en ? ['thank', 'thanks', 'thx'] : ['谢', '感谢'];
+
+  if (agree.some((w) => text.includes(w))) {
     return t('dialogue.fallback.agree');
   }
   if (text.includes('？') || text.includes('?')) {
     return t('dialogue.fallback.question');
   }
-  if (text.includes('不') || text.includes('拒绝') || text.includes('不行')) {
+  if (reject.some((w) => text.includes(w))) {
     return t('dialogue.fallback.reject');
   }
-  if (text.includes('谢')) {
+  if (thanks.some((w) => text.includes(w))) {
     return t('dialogue.fallback.thanks');
   }
   

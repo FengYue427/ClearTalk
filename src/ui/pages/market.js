@@ -9,7 +9,7 @@ import { logger } from '../../core/logger.js';
 import { triggerHaptic, isOnline, events } from '../../core/utils.js';
 import { showToast, showLoading, showConfirm, createEmptyState, createSceneCard } from '../components/index.js';
 import { navigateTo } from './router.js';
-import { t } from '../../core/i18n.js';
+import { t, translateApiError } from '../../core/i18n.js';
 import {
   getSceneName,
   getSceneDescription,
@@ -420,7 +420,7 @@ async function useScene(id) {
     if (result.success) {
       showToast(t('market.added'));
     } else {
-      showToast(result.error || t('error.unknown'));
+      showToast(translateApiError(result.error || '') || t('error.unknown'));
     }
   } catch (error) {
     showToast(t('error.unknown'));
@@ -445,7 +445,7 @@ function deleteMyScene(id) {
           renderScenes();
           showToast(t('common.delete.success'));
         } else {
-          showToast(result.error || t('common.delete.failed'));
+          showToast(translateApiError(result.error || '') || t('common.delete.failed'));
         }
       } catch (error) {
         showToast(t('common.delete.failed'));
@@ -485,7 +485,7 @@ function shareCurrentScene() {
           scenesCache = [];
           initMarket();
         } else {
-          showToast(result.error || t('market.share.failed'));
+          showToast(translateApiError(result.error || '') || t('market.share.failed'));
         }
       } catch (error) {
         showToast(t('market.share.failed'));

@@ -9,7 +9,7 @@ import { triggerHaptic, events, isOnline } from '../../core/utils.js';
 import { UserService } from '../../services/user-service.js';
 import { showToast, showConfirm, showModal } from '../components/index.js';
 import { navigateTo } from './router.js';
-import { t } from '../../core/i18n.js';
+import { t, translateApiError } from '../../core/i18n.js';
 import { getLegalPageUrl } from '../../core/legal-urls.js';
 
 // 页面状态
@@ -588,7 +588,7 @@ async function renderResetPasswordPage(container, email, token) {
         navigateTo('user');
       }, 1500);
     } else {
-      showAuthError(result.error || t('auth.error.reset.failed'));
+      showAuthError(translateApiError(result.error || '') || t('auth.error.reset.failed'));
     }
     
     setLoading(false);
@@ -804,7 +804,7 @@ async function handlePasswordLogin(e) {
     } else if (result.error?.includes('404') || result.error?.includes('Failed to fetch')) {
       showAuthError('⚠️ ' + t('error.network'));
     } else {
-      showAuthError('❌ ' + result.error);
+      showAuthError('❌ ' + translateApiError(result.error || ''));
     }
   }
   
@@ -847,7 +847,7 @@ async function handleSendCode() {
       }
     }, 1000);
   } else {
-    showAuthError('❌ ' + (result.error || t('auth.error.send.code.failed')), authRoot);
+    showAuthError('❌ ' + (translateApiError(result.error || '') || t('auth.error.send.code.failed')), authRoot);
     btn.disabled = false;
   }
 }
@@ -874,7 +874,7 @@ async function handleCodeLogin(e) {
     showToast(result.isNewUser ? '✅ ' + t('auth.register.success') : '✅ ' + t('auth.login.success'));
     initUser();
   } else {
-    showAuthError('❌ ' + result.error);
+    showAuthError('❌ ' + translateApiError(result.error || ''));
   }
   
   setLoading(false);
@@ -923,7 +923,7 @@ async function handleRegister(e) {
     showToast('✅ ' + t('auth.register.success'));
     initUser();
   } else {
-    showAuthError('❌ ' + result.error);
+    showAuthError('❌ ' + translateApiError(result.error || ''));
   }
   
   setLoading(false);
@@ -953,7 +953,7 @@ async function handleForgotPassword(e) {
       console.log('Reset URL:', result.resetUrl);
     }
   } else {
-    showAuthError('❌ ' + result.error);
+    showAuthError('❌ ' + translateApiError(result.error || ''));
   }
   
   setLoading(false);
@@ -1134,7 +1134,7 @@ async function syncNow() {
     showToast('✅ ' + t('sync.success'));
     initUser();
   } else {
-    showToast('❌ ' + t('sync.failed') + ': ' + result.error);
+    showToast('❌ ' + t('sync.failed') + ': ' + translateApiError(result.error || ''));
   }
 }
 

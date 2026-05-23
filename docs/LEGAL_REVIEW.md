@@ -13,7 +13,8 @@
 | 用户协议 | https://clear-talk-five.vercel.app/terms.html | https://clear-talk-five.vercel.app/terms-en.html |
 | 免责声明 | https://clear-talk-five.vercel.app/disclaimer.html | https://clear-talk-five.vercel.app/disclaimer-en.html |
 
-仓库源文件：`public/privacy.html`、`public/terms.html`、`public/disclaimer.html` 及对应 `*-en.html`。
+仓库源文件：`public/privacy.html`、`public/terms.html`、`public/disclaimer.html` 及对应 `*-en.html`。  
+联系邮箱单一来源：`src/core/legal-constants.js` → 运行 `npm run legal:sync` 同步到所有法务页与根目录副本。
 
 ---
 

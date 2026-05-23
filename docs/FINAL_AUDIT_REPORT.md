@@ -15,7 +15,8 @@
 | scene-translations.en | ✅ 无汉字 |
 | 发信（Resend） | ✅ |
 | i18n UI 字典 zh/en | ✅ 已补齐缺口并加 API 错误映射 |
-| 后端 API 错误语言 | ⚠️ 源仍为中文；英文模式经 `translateApiError` 映射常见文案 |
+| 后端 API 错误语言 | ⚠️ 源仍为中文；英文 UI 经 `translateApiError` 覆盖 40+ 常见文案 |
+| 法务页同步 | ✅ `legal-constants.js` + `npm run legal:sync` |
 
 ---
 

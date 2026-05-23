@@ -23,6 +23,7 @@
     "smoke:production": "node scripts/production-smoke.mjs",
     "verify:production": "node scripts/verify-production-api.mjs",
     "audit": "node scripts/final-audit.mjs",
+    "legal:sync": "node scripts/sync-legal-html.mjs",
     "lint": "eslint src --ext .js",
     "lint:fix": "eslint src --ext .js --fix",
     "format": "prettier --write \"src/**/*.{js,css,html}\""
