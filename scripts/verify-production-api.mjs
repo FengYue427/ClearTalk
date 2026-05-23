@@ -22,7 +22,8 @@ async function main() {
   console.log('  email ready:', data.checks?.emailSmtpVerified);
 
   if (data.checks?.email && data.checks?.emailSmtpVerified) {
-    console.log('\n✓ SMTP 已配置且连接验证通过 — 可发验证码登录\n');
+    const via = data.checks?.emailProvider === 'resend' ? 'Resend' : 'SMTP';
+    console.log(`\n✓ 发信已就绪（${via}）— 可发验证码登录\n`);
   } else if (data.checks?.email) {
     console.log('\n⚠ Render 有 EMAIL_* 变量但 SMTP 未验证 — 验证码可能仍失败');
     console.log('  查看 Render Logs: [Email] 环境变量检测 / SMTP 连接验证失败');

@@ -8,8 +8,8 @@
 
 | # | 任务 | 完成 |
 |---|------|------|
-| 1 | Render 配置 SMTP（见 [`S7_OPERATOR_GUIDE.md`](S7_OPERATOR_GUIDE.md) §SMTP） | ☐ |
-| 2 | 确认注册邮件/验证码**不再**在 API JSON 里返回 `code` | ☐ |
+| 1 | Render 配置发信（**Resend**，见 [`EMAIL_RESEND_RENDER.md`](EMAIL_RESEND_RENDER.md)） | ☑ |
+| 2 | 确认注册邮件/验证码**不再**在 API JSON 里返回 `code` | ☑ |
 | 3 | Sentry：前端 + API DSN | ☐ |
 | 4 | SQLite 备份：每周复制 `cleartalk.db` 或 Render 快照 | ☐ |
 | 5 | 记录 `FEEDBACK_ADMIN_KEY`、`JWT_SECRET` 到密码管理器 | ☐ |

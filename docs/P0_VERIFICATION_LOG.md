@@ -47,3 +47,7 @@
 | Render 163 SMTP | ❌ 不可用 | 465/587 均 `ETIMEDOUT` |
 | Resend API | ✅ | Logs: `Email: Enabled (Resend API)` |
 | `POST /api/auth/send-code` | ✅ HTTP 200 | `emailProvider: resend`, `emailSmtpVerified: true` |
+| `npm run smoke:production` | ✅ 全绿 | 2026-05-23 自动 + 用户确认 C 表 |
+| 用户验收 | ✅ | 验证码邮件、登录、核心路径无阻塞 |
+
+**当前阶段**：**B 档 Day 1–2** → 发内测邀请（[`BETA_INVITE_READY.txt`](BETA_INVITE_READY.txt)）

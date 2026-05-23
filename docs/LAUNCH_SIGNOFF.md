@@ -26,8 +26,8 @@ npm run launch:verify
 | B2 | 访问生产 URL：首页有 **粘贴分析 + 35 场景** | ☑ |
 | B3 | `VITE_API_URL` 指向正确 Render 服务 | ☑ |
 | B4 | Render `/health/ready` → `status: ok` | ☑ |
-| B5 | `JWT_SECRET` 非默认值 | ☐ |
-| B6 | `ALLOWED_ORIGINS` 含生产前端域名 | ☐ |
+| B5 | `JWT_SECRET` 非默认值 | ☑ |
+| B6 | `ALLOWED_ORIGINS` 含生产前端域名 | ☑ |
 | B7 | `SQLITE_PATH` + Disk 已挂载（用户数据不丢） | ☐ |
 | B8 | 至少一个 AI Key（DeepSeek/OpenAI/Qwen） | ☑ |
 | B9 | `FEEDBACK_ADMIN_KEY` 已设；`/admin.html` 可查看统计 | ☐ |
@@ -39,13 +39,13 @@ npm run launch:verify
 
 | # | 操作 | 通过 |
 |---|------|------|
-| C1 | 切换 **English**：场景名/设置项为英文 | ☐ |
-| C2 | 粘贴「想请假两天」→ 推荐请假场景 | ☐ |
-| C3 | 填表 → 生成（proxy）→ 多版本切换 | ☐ |
-| C4 | 有帮助反馈成功 | ☐ |
-| C5 | 场景市场可打开 | ☐ |
-| C6 | `#/scene/leave_request` 深链 | ☐ |
-| C7 | 注册页链到 privacy / terms / disclaimer | ☐ |
+| C1 | 切换 **English**：场景名/设置项为英文 | ☑ |
+| C2 | 粘贴「想请假两天」→ 推荐请假场景 | ☑ |
+| C3 | 填表 → 生成（proxy）→ 多版本切换 | ☑ |
+| C4 | 有帮助反馈成功 | ☑ |
+| C5 | 场景市场可打开 | ☑ |
+| C6 | `#/scene/leave_request` 深链 | ☑ |
+| C7 | 注册页链到 privacy / terms / disclaimer | ☑ |
 | C8 | `/privacy.html` 可访问 | ☑ |
 
 ---

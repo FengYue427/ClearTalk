@@ -15,32 +15,36 @@
 
 打开 [`LAUNCH_SIGNOFF.md`](LAUNCH_SIGNOFF.md) **C 表**，逐项打勾：
 
-- [ ] English 模式 + `package_issue` 表单全英文  
-- [ ] 粘贴「想请假两天」→ 推荐请假场景  
-- [ ] 填表 → 生成 → 简短/正式切换  
-- [ ] 👍 反馈  
-- [ ] `#/scene/leave_request`  
-- [ ] 注册页法务链接（英文应打开 `*-en.html`）  
+- [x] English 模式 + `package_issue` 表单全英文（2026-05-23 用户确认 + `npm run smoke:production`）  
+- [x] 粘贴「想请假两天」→ 推荐请假场景  
+- [x] 填表 → 生成 → 简短/正式切换  
+- [x] 👍 反馈  
+- [x] `#/scene/leave_request`  
+- [x] 注册页法务链接（英文应打开 `*-en.html`）  
+- [x] 验证码登录 + 163 收件（Resend）
+
+自动检查：`npm run smoke:production` 全绿。
 
 ### ② 运维确认（Render / Vercel 面板）
 
 在 [`LAUNCH_SIGNOFF.md`](LAUNCH_SIGNOFF.md) **B 表**勾选：
 
-- [ ] B1 Vercel Ready  
-- [ ] B5 `JWT_SECRET` 已改（非默认）  
-- [ ] B6 `ALLOWED_ORIGINS` 含 Vercel 域名  
-- [ ] B7 Disk + `SQLITE_PATH`  
-- [ ] B9 `FEEDBACK_ADMIN_KEY` + `/admin.html`  
+- [x] B1 Vercel Ready  
+- [x] B5 `JWT_SECRET` 已改（`/health/ready` → `jwt: true`）  
+- [x] B6 `ALLOWED_ORIGINS` 含 Vercel 域名（`corsOrigins: 2`）  
+- [ ] B7 Disk + `SQLITE_PATH`（Render 面板确认 Disk 已挂载）  
+- [ ] B9 `FEEDBACK_ADMIN_KEY` + `/admin.html`（浏览器打开 `/admin.html` 输入密钥）  
 
-### ③ 配置 SMTP（B 档关键）
+### ③ 配置发信（B 档关键）✅
 
-跟 [`SMTP_RENDER_SETUP.md`](SMTP_RENDER_SETUP.md) 配好后，确认 `/health/ready` → `"email": true`。
+Render 使用 **Resend**（163 SMTP 在海外机房超时）。见 [`EMAIL_RESEND_RENDER.md`](EMAIL_RESEND_RENDER.md)。  
+`/health/ready` → `emailProvider: resend`, `emailSmtpVerified: true`。
 
 ---
 
-## Day 1–2
+## Day 1–2（当前步骤）
 
-- [ ] 复制 [`BETA_INVITE.md`](BETA_INVITE.md) 发到内测群（20–50 人）  
+- [ ] 复制 [`BETA_INVITE_READY.txt`](BETA_INVITE_READY.txt) 发到内测群（20–50 人）  
 - [ ] 记录 3 条必测路径：粘贴推荐、请假、快递投诉  
 - [ ] （可选）Sentry 前端 + API  
 

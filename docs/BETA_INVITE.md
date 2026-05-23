@@ -1,5 +1,7 @@
 # ClearTalk 内测邀请模板（B 档）
 
+**一键复制**：[`BETA_INVITE_READY.txt`](BETA_INVITE_READY.txt)（中英已填好生产链接）
+
 复制到微信群 / 邮件，替换 `[链接]`。
 
 ---
