@@ -34,11 +34,17 @@ let transporter = null;
 /** SMTP verify() 通过后才为 true（仅表示能连上服务器，不等于每封都能送达） */
 let smtpVerified = false;
 
-function buildSmtpTransport() {
-  const emailHost = process.env.EMAIL_HOST;
-  const emailPort = parseInt(process.env.EMAIL_PORT, 10) || 587;
-  const emailUser = process.env.EMAIL_USER;
-  const emailPass = process.env.EMAIL_PASS;
+function getSmtpCredentials() {
+  return {
+    host: (process.env.EMAIL_HOST || '').trim(),
+    user: (process.env.EMAIL_USER || '').trim(),
+    pass: (process.env.EMAIL_PASS || '').trim()
+  };
+}
+
+function buildSmtpTransport(portOverride) {
+  const { host: emailHost, user: emailUser, pass: emailPass } = getSmtpCredentials();
+  const emailPort = portOverride ?? (parseInt(process.env.EMAIL_PORT, 10) || 587);
   const secure = emailPort === 465;
 
   return nodemailer.createTransport({
@@ -49,13 +55,20 @@ function buildSmtpTransport() {
       user: emailUser,
       pass: emailPass
     },
-    connectionTimeout: 20000,
-    greetingTimeout: 20000,
-    socketTimeout: 20000,
+    connectionTimeout: 25000,
+    greetingTimeout: 25000,
+    socketTimeout: 25000,
     ...(secure
       ? { tls: { servername: emailHost, minVersion: 'TLSv1.2' } }
       : { requireTLS: true, tls: { servername: emailHost, minVersion: 'TLSv1.2' } })
   });
+}
+
+async function verifySmtpTransport(candidate, label) {
+  await candidate.verify();
+  console.log(`[Email] SMTP 连接验证成功 (${label})`);
+  smtpVerified = true;
+  return candidate;
 }
 
 /** 163 等要求发件人地址与登录邮箱一致 */
@@ -67,30 +80,46 @@ function getMailFrom() {
   return `"ClearTalk" <${user}>`;
 }
 
-function initEmailService() {
-  const emailHost = process.env.EMAIL_HOST;
-  const emailUser = process.env.EMAIL_USER;
-  const emailPass = process.env.EMAIL_PASS;
+function logSmtpVerifyError(err, portLabel) {
+  console.error(`[Email] SMTP 连接验证失败 (${portLabel}):`, err.message);
+  if (err.code) console.error('[Email]   code:', err.code);
+  if (err.response) console.error('[Email]   response:', err.response);
+}
 
-  if (emailHost && emailUser && emailPass) {
-    transporter = buildSmtpTransport();
-    console.log(`[Email] 邮箱服务已配置 (${emailHost}:${process.env.EMAIL_PORT || 587})`);
-    transporter
-      .verify()
-      .then(() => {
-        smtpVerified = true;
-        console.log('[Email] SMTP 连接验证成功');
-      })
-      .catch((err) => {
-        smtpVerified = false;
-        console.error('[Email] SMTP 连接验证失败:', err.message);
-        if (err.code) console.error('[Email]   code:', err.code);
-        if (err.response) console.error('[Email]   response:', err.response);
-        console.error('[Email]   请检查 163 授权码、EMAIL_PORT(465/587)，见 docs/SMTP_163_SETUP.md');
-      });
-  } else {
+async function initEmailServiceAsync() {
+  const { host: emailHost, user: emailUser, pass: emailPass } = getSmtpCredentials();
+
+  if (!emailHost || !emailUser || !emailPass) {
     console.log('[Email] 邮箱服务未配置，将使用模拟模式');
+    return;
   }
+
+  const configuredPort = parseInt(process.env.EMAIL_PORT, 10) || 465;
+  console.log(`[Email] 邮箱服务已配置 (${emailHost}:${configuredPort})`);
+
+  const portsToTry = configuredPort === 465 ? [465, 587] : [configuredPort, 465];
+
+  for (const port of [...new Set(portsToTry)]) {
+    try {
+      transporter = await verifySmtpTransport(buildSmtpTransport(port), `port ${port}`);
+      if (port !== configuredPort) {
+        console.warn(`[Email] 提示: 环境变量 EMAIL_PORT=${configuredPort} 不可用，当前使用 ${port}。建议在 Render 改为 EMAIL_PORT=${port}`);
+      }
+      return;
+    } catch (err) {
+      logSmtpVerifyError(err, `port ${port}`);
+      smtpVerified = false;
+      transporter = null;
+    }
+  }
+
+  console.error('[Email] 所有端口均失败。请确认：163 新增授权码已填入 EMAIL_PASS（无空格）、已 Save+Deploy，见 docs/SMTP_163_SETUP.md');
+}
+
+function initEmailService() {
+  initEmailServiceAsync().catch((err) => {
+    console.error('[Email] 初始化异常:', err);
+  });
 }
 
 function getFrontendBase() {
