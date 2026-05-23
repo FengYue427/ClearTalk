@@ -262,6 +262,22 @@
   border-radius: var(--radius-sm);
 }
 
+.result-legal-hint {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary, #888);
+}
+
+.result-legal-hint a {
+  color: var(--primary, #5B8DEF);
+  text-decoration: none;
+}
+
+.result-legal-hint a:hover {
+  text-decoration: underline;
+}
+
 .result-content {
   padding: var(--spacing-md);
   background: var(--bg-secondary);

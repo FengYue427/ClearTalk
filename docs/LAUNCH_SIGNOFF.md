@@ -52,6 +52,8 @@ npm run launch:verify
 
 ## D. 法务与品牌
 
+> 审阅步骤：[`LEGAL_REVIEW.md`](LEGAL_REVIEW.md)
+
 | # | 检查项 | 通过 |
 |---|--------|------|
 | D1 | 隐私政策 / 用户协议 / 免责声明已审阅（中 + 英版本已提供） | ☐ |

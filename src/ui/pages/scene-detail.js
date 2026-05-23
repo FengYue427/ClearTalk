@@ -14,6 +14,7 @@ import { QuotaService } from '../../services/quota-service.js';
 import { showToast, showLoading, createButton, createEmptyState, showModal } from '../components/index.js';
 import { navigateTo } from './router.js';
 import { t } from '../../core/i18n.js';
+import { getLegalPageUrl } from '../../core/legal-urls.js';
 import { getSceneName, getSceneDescription, getFieldLabel, getFieldPlaceholder, getSelectOptionLabel } from '../../core/scene-l10n.js';
 import { isVoiceSupported, createVoiceRecognizer, getVoiceLanguage } from '../../services/voice-service.js';
 import { logger } from '../../core/logger.js';
@@ -373,6 +374,9 @@ function renderResultArea(container) {
       <button type="button" class="version-chip" data-version="softened">${t('result.version.softened')}</button>
     </div>
     <div class="result-content" id="result-content"></div>
+    <p class="result-legal-hint">${t('result.legal.hint')}
+      <a href="${getLegalPageUrl('/disclaimer.html')}" target="_blank" rel="noopener">${t('result.legal.link')}</a>
+    </p>
     <div class="result-actions">
       <button class="btn btn-secondary" id="btn-copy" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

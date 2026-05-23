@@ -50,6 +50,12 @@ Render 使用 **Resend**（163 SMTP 在海外机房超时）。见 [`EMAIL_RESEN
 
 ---
 
+## 法务审阅（D 表，可与内测并行）
+
+按 [`LEGAL_REVIEW.md`](LEGAL_REVIEW.md) 审阅六份页面（中 + 英），勾选 [`LAUNCH_SIGNOFF.md`](LAUNCH_SIGNOFF.md) D1–D3。
+
+---
+
 ## Day 3–7
 
 对照 [`SOFT_LAUNCH_CHECKLIST.md`](SOFT_LAUNCH_CHECKLIST.md) 看指标：
