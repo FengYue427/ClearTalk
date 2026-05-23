@@ -31,7 +31,7 @@ npm run launch:verify
 | B7 | `SQLITE_PATH` + Disk 已挂载（用户数据不丢） | ☐ |
 | B8 | 至少一个 AI Key（DeepSeek/OpenAI/Qwen） | ☑ |
 | B9 | `FEEDBACK_ADMIN_KEY` 已设；`/admin.html` 可查看统计 | ☐ |
-| B10 | 生产已配 SMTP，或接受内测期模拟验证码 | ☐ |
+| B10 | 生产已配 SMTP，或接受内测期模拟验证码 | ☑ |
 
 ---
 
@@ -69,7 +69,7 @@ npm run launch:verify
 
 **结论（勾选其一）：**
 
-- [ ] **有条件上市** — 内测期，SMTP/域名待补（**当前推荐**：部署已完成，配 SMTP + C 表冒烟后勾选）  
+- [x] **有条件上市** — 内测期，SMTP 已配；完成 C 表冒烟 + B5–B9 后可升 **准予上市**  
 - [ ] **准予上市** — A 全过，B/C 无阻塞项  
 - [ ] **暂缓** — 说明阻塞项：________________
 
