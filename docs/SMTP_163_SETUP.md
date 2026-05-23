@@ -1,4 +1,7 @@
-# 163 邮箱 → Render SMTP（ClearTalk）
+# 163 邮箱 → SMTP（ClearTalk）
+
+> ⚠️ **Render 部署请勿依赖 163 SMTP**：日志出现 `ETIMEDOUT`（465/587 均超时）时，请改用 **[EMAIL_RESEND_RENDER.md](EMAIL_RESEND_RENDER.md)**。  
+> 163 SMTP 仅适合 **本机开发** 或 **国内云主机** 部署 API。
 
 > 在 [163 邮箱网页版](https://mail.163.com) 开启 SMTP 并获取 **客户端授权密码**（不是登录密码）。
 

@@ -31,8 +31,19 @@ function ipHash(req) {
 
 // ============== 邮箱服务 ==============
 let transporter = null;
-/** SMTP verify() 通过后才为 true（仅表示能连上服务器，不等于每封都能送达） */
+/** smtp | resend | none */
+let emailProvider = 'none';
+/** SMTP verify() 或 Resend 配置成功 */
 let smtpVerified = false;
+
+function isResendConfigured() {
+  return Boolean((process.env.RESEND_API_KEY || '').trim());
+}
+
+function wantsResendProvider() {
+  const p = (process.env.EMAIL_PROVIDER || '').trim().toLowerCase();
+  return p === 'resend' || isResendConfigured();
+}
 
 function getSmtpCredentials() {
   return {
@@ -96,7 +107,45 @@ function logSmtpVerifyError(err, portLabel) {
   if (err.response) console.error('[Email]   response:', err.response);
 }
 
+async function initResendEmail() {
+  if (!isResendConfigured()) {
+    console.error('[Email] EMAIL_PROVIDER=resend 但未设置 RESEND_API_KEY');
+    return false;
+  }
+  emailProvider = 'resend';
+  smtpVerified = true;
+  const from = (process.env.EMAIL_FROM || 'ClearTalk <onboarding@resend.dev>').trim();
+  console.log('[Email] Resend HTTP API 已启用（Render 推荐，不经过 SMTP 端口）');
+  console.log('[Email]   发件人:', from);
+  return true;
+}
+
+async function sendEmailViaResend(to, subject, html) {
+  const from = (process.env.EMAIL_FROM || 'ClearTalk <onboarding@resend.dev>').trim();
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${(process.env.RESEND_API_KEY || '').trim()}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ from, to: [to], subject, html })
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = body.message || body.error || `HTTP ${res.status}`;
+    console.error('[Email] Resend 发送失败:', msg);
+    return { success: false, error: msg };
+  }
+  console.log(`[Email] Resend 已发送到 ${to}: ${body.id || 'ok'}`);
+  return { success: true, messageId: body.id };
+}
+
 async function initEmailServiceAsync() {
+  if (wantsResendProvider()) {
+    await initResendEmail();
+    return;
+  }
+
   const { host: emailHost, user: emailUser, pass: emailPass } = getSmtpCredentials();
 
   console.log('[Email] 环境变量检测:', {
@@ -104,7 +153,8 @@ async function initEmailServiceAsync() {
     EMAIL_USER: Boolean(emailUser),
     EMAIL_PASS: Boolean(emailPass),
     EMAIL_PASS_length: emailPass ? emailPass.length : 0,
-    EMAIL_PORT: process.env.EMAIL_PORT || '(default 465)'
+    EMAIL_PORT: process.env.EMAIL_PORT || '(default 465)',
+    RESEND_API_KEY: isResendConfigured()
   });
 
   if (!emailHost || !emailUser || !emailPass) {
@@ -126,6 +176,7 @@ async function initEmailServiceAsync() {
   for (const port of portsToTry) {
     try {
       transporter = await verifySmtpTransport(buildSmtpTransport(port), `port ${port}`);
+      emailProvider = 'smtp';
       if (port !== configuredPort) {
         console.warn(`[Email] 提示: 环境变量 EMAIL_PORT=${configuredPort} 不可用，当前使用 ${port}。建议在 Render 改为 EMAIL_PORT=${port}`);
       }
@@ -138,15 +189,22 @@ async function initEmailServiceAsync() {
 
   // 保留 transporter 供 sendMail 重试；health 用 emailSmtpVerified 区分
   transporter = buildSmtpTransport(configuredPort);
-  console.error('[Email] SMTP 验证未通过，发送时可能失败。请检查 163 授权码与 EMAIL_PORT，见 docs/SMTP_163_SETUP.md');
+  emailProvider = 'smtp';
+  console.error('[Email] SMTP 验证未通过，发送时可能失败。');
+  if (process.env.RENDER) {
+    console.error('[Email] Render 无法连接国内 SMTP（163/QQ 常 ETIMEDOUT）。请配置 RESEND_API_KEY，见 docs/EMAIL_RESEND_RENDER.md');
+  } else {
+    console.error('[Email] 请检查授权码与 EMAIL_PORT，见 docs/SMTP_163_SETUP.md');
+  }
 }
 
 function getEmailStartupLabel() {
+  if (emailProvider === 'resend' && smtpVerified) return 'Enabled (Resend API)';
   if (!getSmtpCredentials().host || !getSmtpCredentials().user || !getSmtpCredentials().pass) {
     return 'Simulated (no EMAIL_* env)';
   }
-  if (smtpVerified) return 'Enabled';
-  return 'Configured (SMTP verify pending/failed)';
+  if (smtpVerified) return 'Enabled (SMTP)';
+  return 'Configured (SMTP verify failed)';
 }
 
 function getFrontendBase() {
@@ -164,6 +222,10 @@ function emailExtrasAllowed() {
 
 // 发送邮件
 async function sendEmail(to, subject, html) {
+  if (emailProvider === 'resend') {
+    return sendEmailViaResend(to, subject, html);
+  }
+
   if (!transporter) {
     console.log(`[Email] 模拟发送邮件到 ${to}: ${subject}`);
     return { success: true, simulated: true };
@@ -1122,7 +1184,8 @@ function getHealthPayload() {
     environment: process.env.NODE_ENV || 'development',
     checks: {
       database: DB.getMode?.() || 'sqlite',
-      email: Boolean(getSmtpCredentials().host && getSmtpCredentials().user && getSmtpCredentials().pass),
+      email: emailProvider === 'resend' || Boolean(getSmtpCredentials().host && getSmtpCredentials().user && getSmtpCredentials().pass),
+      emailProvider,
       emailSmtpVerified: smtpVerified,
       ai,
       jwt: jwtOk,

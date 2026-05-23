@@ -17,8 +17,9 @@ async function main() {
   console.log('✓ status:', data.status);
   console.log('  jwt:', data.checks?.jwt);
   console.log('  ai.ready:', data.checks?.ai?.ready);
-  console.log('  email (SMTP vars):', data.checks?.email);
-  console.log('  email SMTP verified:', data.checks?.emailSmtpVerified);
+  console.log('  email configured:', data.checks?.email);
+  console.log('  email provider:', data.checks?.emailProvider || '(smtp)');
+  console.log('  email ready:', data.checks?.emailSmtpVerified);
 
   if (data.checks?.email && data.checks?.emailSmtpVerified) {
     console.log('\n✓ SMTP 已配置且连接验证通过 — 可发验证码登录\n');
