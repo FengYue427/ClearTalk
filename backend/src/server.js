@@ -89,8 +89,19 @@ function logSmtpVerifyError(err, portLabel) {
 async function initEmailServiceAsync() {
   const { host: emailHost, user: emailUser, pass: emailPass } = getSmtpCredentials();
 
+  console.log('[Email] 环境变量检测:', {
+    EMAIL_HOST: Boolean(emailHost),
+    EMAIL_USER: Boolean(emailUser),
+    EMAIL_PASS: Boolean(emailPass),
+    EMAIL_PASS_length: emailPass ? emailPass.length : 0,
+    EMAIL_PORT: process.env.EMAIL_PORT || '(default 465)'
+  });
+
   if (!emailHost || !emailUser || !emailPass) {
     console.log('[Email] 邮箱服务未配置，将使用模拟模式');
+    console.log('[Email] 请在 Render → 本服务 ClearTalk → Environment 添加 EMAIL_HOST/USER/PASS 后 Save+Deploy');
+    transporter = null;
+    smtpVerified = false;
     return;
   }
 
@@ -109,17 +120,20 @@ async function initEmailServiceAsync() {
     } catch (err) {
       logSmtpVerifyError(err, `port ${port}`);
       smtpVerified = false;
-      transporter = null;
     }
   }
 
-  console.error('[Email] 所有端口均失败。请确认：163 新增授权码已填入 EMAIL_PASS（无空格）、已 Save+Deploy，见 docs/SMTP_163_SETUP.md');
+  // 保留 transporter 供 sendMail 重试；health 用 emailSmtpVerified 区分
+  transporter = buildSmtpTransport(configuredPort);
+  console.error('[Email] SMTP 验证未通过，发送时可能失败。请检查 163 授权码与 EMAIL_PORT，见 docs/SMTP_163_SETUP.md');
 }
 
-function initEmailService() {
-  initEmailServiceAsync().catch((err) => {
-    console.error('[Email] 初始化异常:', err);
-  });
+function getEmailStartupLabel() {
+  if (!getSmtpCredentials().host || !getSmtpCredentials().user || !getSmtpCredentials().pass) {
+    return 'Simulated (no EMAIL_* env)';
+  }
+  if (smtpVerified) return 'Enabled';
+  return 'Configured (SMTP verify pending/failed)';
 }
 
 function getFrontendBase() {
@@ -1095,7 +1109,7 @@ function getHealthPayload() {
     environment: process.env.NODE_ENV || 'development',
     checks: {
       database: DB.getMode?.() || 'sqlite',
-      email: !!transporter,
+      email: Boolean(getSmtpCredentials().host && getSmtpCredentials().user && getSmtpCredentials().pass),
       emailSmtpVerified: smtpVerified,
       ai,
       jwt: jwtOk,
@@ -1141,14 +1155,15 @@ function validateStartup() {
   console.log(`[Startup] AI 已配置: ${ai.configured.join(', ') || '无'}`);
 }
 
-function start() {
+async function start() {
   DB.init();
-  initEmailService();
+  await initEmailServiceAsync();
   validateStartup();
 
   app.listen(PORT, () => {
     const ai = getAiStatus();
     const stats = DB.getStats();
+    const emailLabel = getEmailStartupLabel();
     console.log(`
 ╔════════════════════════════════════════╗
 ║     ClearTalk API Server v3.2.0        ║
@@ -1156,7 +1171,7 @@ function start() {
 ║  Port: ${PORT}                            ║
 ║  Database: ${(DB.getMode?.() || 'sqlite').padEnd(28)}║
 ║  Users: ${stats.users}  Scenes: ${stats.scenes}              ║
-║  Email: ${transporter ? 'Enabled' : 'Simulated'}                ║
+║  Email: ${emailLabel.padEnd(34)}║
 ║  AI: ${ai.configured.join(', ') || 'none'}                       ║
 ╠════════════════════════════════════════╣
 ║  Features:                               ║

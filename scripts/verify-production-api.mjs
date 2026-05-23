@@ -23,10 +23,13 @@ async function main() {
   if (data.checks?.email && data.checks?.emailSmtpVerified) {
     console.log('\n✓ SMTP 已配置且连接验证通过 — 可发验证码登录\n');
   } else if (data.checks?.email) {
-    console.log('\n⚠ SMTP 变量已设但连接未验证 — 验证码可能发送失败');
-    console.log('  查看 Render Logs: [Email] SMTP 连接验证失败');
-    console.log('  常见：163 授权码错误/过期 → 重新生成并更新 EMAIL_PASS，或改 EMAIL_PORT=587\n');
+    console.log('\n⚠ Render 有 EMAIL_* 变量但 SMTP 未验证 — 验证码可能仍失败');
+    console.log('  查看 Render Logs: [Email] 环境变量检测 / SMTP 连接验证失败');
+    console.log('  常见：163 授权码错误 → 重新生成 EMAIL_PASS，或 EMAIL_PORT=587\n');
   } else {
+    console.log('\n✗ 生产未读取到 EMAIL_* 环境变量（日志会显示 Email: Simulated）');
+    console.log('  Render → ClearTalk 服务 → Environment → 确认 EMAIL_HOST/USER/PASS 在本服务上');
+    console.log('  修改后必须点 Save, rebuild, and deploy\n');
     console.log('\n⚠ SMTP 未配置 — 请按 docs/SMTP_RENDER_SETUP.md 配置后再内测\n');
     console.log('  内测前仍可用：密码注册/登录\n');
   }
