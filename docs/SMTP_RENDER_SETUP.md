@@ -38,6 +38,8 @@ EMAIL_FROM=ClearTalk <你的QQ号@qq.com>
 
 ### 163 邮箱
 
+**逐步说明（推荐）**：[`SMTP_163_SETUP.md`](SMTP_163_SETUP.md)
+
 ```
 EMAIL_HOST=smtp.163.com
 EMAIL_PORT=465
