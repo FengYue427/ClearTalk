@@ -38,4 +38,12 @@
 | Render `/health/ready` | ✅ | `email: true`（163 SMTP） |
 | `npm run verify:production` | ✅ | `email (SMTP): true` — 可发内测邀请 |
 
-**待办**：C 表浏览器冒烟 · 163 授权码若曾泄露请轮换 · B5–B7、B9 人工确认
+**待办**：C 表浏览器冒烟 · B5–B7、B9 人工确认
+
+## 2026-05-23（Resend）
+
+| 检查项 | 结果 | 证据 |
+|--------|------|------|
+| Render 163 SMTP | ❌ 不可用 | 465/587 均 `ETIMEDOUT` |
+| Resend API | ✅ | Logs: `Email: Enabled (Resend API)` |
+| `POST /api/auth/send-code` | ✅ HTTP 200 | `emailProvider: resend`, `emailSmtpVerified: true` |

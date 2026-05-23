@@ -31,7 +31,7 @@ npm run launch:verify
 | B7 | `SQLITE_PATH` + Disk 已挂载（用户数据不丢） | ☐ |
 | B8 | 至少一个 AI Key（DeepSeek/OpenAI/Qwen） | ☑ |
 | B9 | `FEEDBACK_ADMIN_KEY` 已设；`/admin.html` 可查看统计 | ☐ |
-| B10 | 生产已配 SMTP，或接受内测期模拟验证码 | ☑ |
+| B10 | 生产已配发信（Resend API / SMTP） | ☑ |
 
 ---
 
