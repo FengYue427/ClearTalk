@@ -22,6 +22,7 @@
     "launch:verify": "node scripts/launch-verify.mjs",
     "smoke:production": "node scripts/production-smoke.mjs",
     "verify:production": "node scripts/verify-production-api.mjs",
+    "verify:deploy": "node scripts/verify-deploy.mjs",
     "audit": "node scripts/final-audit.mjs",
     "i18n:audit": "node scripts/audit-i18n-keys.mjs",
     "legal:sync": "node scripts/sync-legal-html.mjs",
