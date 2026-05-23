@@ -61,8 +61,9 @@ function getStatus(req) {
 function checkQuota(req, res, next) {
   const status = getStatus(req);
   if (status.remaining <= 0) {
+    const { apiError } = require('./api-errors');
     return res.status(429).json({
-      error: '今日 AI 生成次数已用完，明日重置或升级 Pro',
+      ...apiError('quota.exceeded'),
       code: 'QUOTA_EXCEEDED',
       quota: status
     });

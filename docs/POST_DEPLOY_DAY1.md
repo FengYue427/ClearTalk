@@ -32,8 +32,8 @@
 - [x] B1 Vercel Ready  
 - [x] B5 `JWT_SECRET` 已改（`/health/ready` → `jwt: true`）  
 - [x] B6 `ALLOWED_ORIGINS` 含 Vercel 域名（`corsOrigins: 2`）  
-- [ ] B7 Disk + `SQLITE_PATH`（Render 面板确认 Disk 已挂载）  
-- [ ] B9 `FEEDBACK_ADMIN_KEY` + `/admin.html`（浏览器打开 `/admin.html` 输入密钥）  
+- [ ] B7 Disk + `SQLITE_PATH`（见 [`RENDER_B7_B9.md`](RENDER_B7_B9.md)）  
+- [ ] B9 `FEEDBACK_ADMIN_KEY` + `/admin.html`（见 [`RENDER_B7_B9.md`](RENDER_B7_B9.md)）  
 
 ### ③ 配置发信（B 档关键）✅
 

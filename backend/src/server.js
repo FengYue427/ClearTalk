@@ -16,6 +16,7 @@ const { chatCompletion, chatCompletionStream, getAiStatus } = require('./ai-prov
 const quota = require('./quota');
 const { classifyPaste } = require('./classify-paste');
 const { loadCatalog } = require('./scene-catalog');
+const { apiError, sendApiError } = require('./api-errors');
 require('dotenv').config();
 
 const app = express();
@@ -288,19 +289,19 @@ app.use(express.json({ limit: '10mb' }));
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
-  message: { error: '请求过于频繁，请稍后再试' }
+  message: apiError('error.rate_limit')
 });
 
 const emailLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 5,
-  message: { error: '发送次数过多，请1小时后再试' }
+  message: apiError('error.rate_limit.email')
 });
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
-  message: { error: '请求过于频繁' }
+  message: apiError('error.rate_limit')
 });
 
 app.use('/api/auth/login', authLimiter);
@@ -310,19 +311,19 @@ app.use('/api/auth/forgot-password', emailLimiter);
 const feedbackLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: parseInt(process.env.FEEDBACK_RATE_LIMIT_MAX, 10) || 20,
-  message: { error: '反馈提交过于频繁，请稍后再试' }
+  message: apiError('error.rate_limit.feedback')
 });
 
 const eventsLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: parseInt(process.env.EVENTS_RATE_LIMIT_MAX, 10) || 60,
-  message: { error: '埋点请求过于频繁' }
+  message: apiError('error.rate_limit.events')
 });
 
 const marketUseLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
-  message: { error: '使用计数过于频繁' }
+  message: apiError('error.rate_limit.market')
 });
 
 app.use('/api/feedback', feedbackLimiter);
@@ -335,12 +336,12 @@ const authenticateToken = (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({ error: '未提供访问令牌' });
+    return sendApiError(res, 401, 'auth.error.login.required');
   }
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
-      return res.status(403).json({ error: '令牌无效或已过期' });
+      return sendApiError(res, 403, 'auth.error.token.expired');
     }
     req.user = user;
     next();
@@ -364,7 +365,7 @@ const FEEDBACK_ADMIN_KEY = process.env.FEEDBACK_ADMIN_KEY || '';
 const requireFeedbackAdmin = (req, res, next) => {
   const key = req.headers['x-admin-key'] || req.query.key;
   if (!FEEDBACK_ADMIN_KEY || key !== FEEDBACK_ADMIN_KEY) {
-    return res.status(403).json({ error: '无权限访问统计数据' });
+    return sendApiError(res, 403, 'error.admin.forbidden');
   }
   next();
 };
@@ -377,17 +378,17 @@ app.post('/api/auth/register', async (req, res) => {
     const { username, email, password } = req.body;
 
     if (!username || !email || !password) {
-      return res.status(400).json({ error: '请填写所有必填字段' });
+      return sendApiError(res, 400, 'auth.error.empty.fields');
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ error: '密码至少需要6个字符' });
+      return sendApiError(res, 400, 'auth.error.password_short');
     }
 
     // 检查是否已存在
     const existingUser = DB.findUserByUsernameOrEmail(username) || DB.findUserByUsernameOrEmail(email);
     if (existingUser) {
-      return res.status(400).json({ error: '用户名或邮箱已被使用' });
+      return sendApiError(res, 400, 'auth.error.user.exists');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -416,7 +417,7 @@ app.post('/api/auth/register', async (req, res) => {
     });
   } catch (error) {
     console.error('[Auth] 注册失败:', error);
-    res.status(500).json({ error: '服务器错误' });
+    res.status(500).json(apiError('error.unknown'));
   }
 });
 
@@ -427,12 +428,12 @@ app.post('/api/auth/login', async (req, res) => {
 
     const user = DB.findUserByUsernameOrEmail(username);
     if (!user) {
-      return res.status(401).json({ error: '用户名或密码错误' });
+      return sendApiError(res, 401, 'auth.error.user.not.found');
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return res.status(401).json({ error: '用户名或密码错误' });
+      return sendApiError(res, 401, 'auth.error.user.not.found');
     }
 
     const token = jwt.sign(
@@ -448,7 +449,7 @@ app.post('/api/auth/login', async (req, res) => {
     });
   } catch (error) {
     console.error('[Auth] 登录失败:', error);
-    res.status(500).json({ error: '服务器错误' });
+    res.status(500).json(apiError('error.unknown'));
   }
 });
 
@@ -458,7 +459,7 @@ app.post('/api/auth/send-code', async (req, res) => {
     const { email, type = 'login' } = req.body;
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({ error: '请输入有效的邮箱地址' });
+      return sendApiError(res, 400, 'auth.error.email_invalid');
     }
 
     // 生成验证码
@@ -492,9 +493,12 @@ app.post('/api/auth/send-code', async (req, res) => {
 
     if (emailResult.simulated) {
       if (!emailExtrasAllowed()) {
-        return res.status(503).json({
-          error: '邮件服务暂未开通，请使用密码登录或联系管理员配置 SMTP'
-        });
+        return sendApiError(
+          res,
+          503,
+          'auth.error.send.code.failed',
+          '邮件服务暂未开通，请使用密码登录或联系管理员配置 SMTP'
+        );
       }
       res.json({ success: true, message: '验证码已发送（开发模式）', code });
     } else if (emailResult.success) {
@@ -503,11 +507,11 @@ app.post('/api/auth/send-code', async (req, res) => {
       const hint = emailResult.code === 'EAUTH'
         ? '邮件认证失败，请检查 163 授权码与 SMTP 是否已开启'
         : '验证码发送失败，请稍后重试';
-      res.status(500).json({ error: hint });
+      res.status(500).json(apiError('auth.error.send.code.failed', hint));
     }
   } catch (error) {
     console.error('[Auth] 发送验证码失败:', error);
-    res.status(500).json({ error: '服务器错误' });
+    res.status(500).json(apiError('error.unknown'));
   }
 });
 
@@ -520,7 +524,7 @@ app.post('/api/auth/verify-code', async (req, res) => {
     const verification = DB.findValidVerification(email, code);
 
     if (!verification) {
-      return res.status(400).json({ error: '验证码错误或已过期' });
+      return sendApiError(res, 400, 'auth.error.invalid.code');
     }
 
     DB.deleteVerification(email);
@@ -556,7 +560,7 @@ app.post('/api/auth/verify-code', async (req, res) => {
     });
   } catch (error) {
     console.error('[Auth] 验证码登录失败:', error);
-    res.status(500).json({ error: '服务器错误' });
+    res.status(500).json(apiError('error.unknown'));
   }
 });
 
@@ -599,9 +603,12 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
     if (emailResult.simulated) {
       if (!emailExtrasAllowed()) {
-        return res.status(503).json({
-          error: '邮件服务暂未开通，无法发送重置邮件，请联系管理员'
-        });
+        return sendApiError(
+          res,
+          503,
+          'auth.error.send.code.failed',
+          '邮件服务暂未开通，无法发送重置邮件，请联系管理员'
+        );
       }
       res.json({ success: true, message: '重置链接已发送（开发模式）', resetUrl, token });
     } else {
@@ -609,7 +616,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     }
   } catch (error) {
     console.error('[Auth] 忘记密码失败:', error);
-    res.status(500).json({ error: '服务器错误' });
+    res.status(500).json(apiError('error.unknown'));
   }
 });
 
@@ -621,13 +628,13 @@ app.post('/api/auth/verify-reset-token', async (req, res) => {
     const reset = DB.findValidPasswordReset(email, token);
 
     if (!reset) {
-      return res.status(400).json({ error: '重置链接已过期或无效' });
+      return sendApiError(res, 400, 'auth.error.token.expired');
     }
 
     res.json({ valid: true });
   } catch (error) {
     console.error('[Auth] 验证令牌失败:', error);
-    res.status(500).json({ error: '服务器错误' });
+    res.status(500).json(apiError('error.unknown'));
   }
 });
 
@@ -637,18 +644,18 @@ app.post('/api/auth/reset-password', async (req, res) => {
     const { email, token, newPassword } = req.body;
 
     if (!newPassword || newPassword.length < 6) {
-      return res.status(400).json({ error: '密码至少需要6个字符' });
+      return sendApiError(res, 400, 'auth.error.password_short');
     }
 
     const reset = DB.findValidPasswordReset(email, token);
 
     if (!reset) {
-      return res.status(400).json({ error: '重置链接已过期或无效' });
+      return sendApiError(res, 400, 'auth.error.token.expired');
     }
 
     const user = DB.findUserByEmail(email);
     if (!user) {
-      return res.status(404).json({ error: '用户不存在' });
+      return sendApiError(res, 404, 'auth.error.account.not.found');
     }
 
     await DB.updateUserPassword(email, await bcrypt.hash(newPassword, 10));
@@ -657,7 +664,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
     res.json({ success: true, message: '密码已重置，请使用新密码登录' });
   } catch (error) {
     console.error('[Auth] 重置密码失败:', error);
-    res.status(500).json({ error: '服务器错误' });
+    res.status(500).json(apiError('error.unknown'));
   }
 });
 
@@ -674,12 +681,12 @@ app.put('/api/user/profile', authenticateToken, async (req, res) => {
 
   const user = DB.findUserById(userId);
   if (!user) {
-    return res.status(404).json({ error: '用户不存在' });
+    return sendApiError(res, 404, 'auth.error.account.not.found');
   }
 
   const existing = DB.findUserConflict(userId, username, email);
   if (existing) {
-    return res.status(400).json({ error: '用户名或邮箱已被使用' });
+    return sendApiError(res, 400, 'auth.error.user.exists');
   }
 
   DB.updateUser(userId, { username, email });
@@ -691,22 +698,22 @@ app.put('/api/user/password', authenticateToken, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     if (!currentPassword || !newPassword || String(newPassword).length < 6) {
-      return res.status(400).json({ error: '请提供当前密码，且新密码至少 6 位' });
+      return sendApiError(res, 400, 'auth.error.password_required');
     }
     const user = DB.findUserById(req.user.userId);
     if (!user) {
-      return res.status(404).json({ error: '用户不存在' });
+      return sendApiError(res, 404, 'auth.error.account.not.found');
     }
     const valid = await bcrypt.compare(currentPassword, user.password);
     if (!valid) {
-      return res.status(401).json({ error: '当前密码不正确' });
+      return sendApiError(res, 401, 'auth.error.wrong.password');
     }
     const hashed = await bcrypt.hash(newPassword, 10);
     DB.updateUserPasswordById(user.id, hashed);
     res.json({ success: true, message: '密码已更新' });
   } catch (error) {
     console.error('[User] 修改密码失败:', error);
-    res.status(500).json({ error: '服务器错误' });
+    res.status(500).json(apiError('error.unknown'));
   }
 });
 
@@ -714,21 +721,21 @@ app.post('/api/user/delete', authenticateToken, async (req, res) => {
   try {
     const { password } = req.body;
     if (!password) {
-      return res.status(400).json({ error: '请提供密码以确认删除账号' });
+      return sendApiError(res, 400, 'auth.error.password_confirm_delete');
     }
     const user = DB.findUserById(req.user.userId);
     if (!user) {
-      return res.status(404).json({ error: '用户不存在' });
+      return sendApiError(res, 404, 'auth.error.account.not.found');
     }
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
-      return res.status(401).json({ error: '密码不正确' });
+      return sendApiError(res, 401, 'auth.error.wrong.password', '密码不正确');
     }
     DB.deleteUserAccount(user.id);
     res.json({ success: true, message: '账号已删除' });
   } catch (error) {
     console.error('[User] 删除账号失败:', error);
-    res.status(500).json({ error: '服务器错误' });
+    res.status(500).json(apiError('error.unknown'));
   }
 });
 
@@ -736,7 +743,7 @@ app.post('/api/user/phrases', authenticateToken, (req, res) => {
   try {
     const { phrase } = req.body;
     if (!phrase?.text || !String(phrase.text).trim()) {
-      return res.status(400).json({ error: '短语内容不能为空' });
+      return sendApiError(res, 400, 'error.invalid_input', '短语内容不能为空');
     }
     const userId = req.user.userId;
     const phrases = DB.getPhrases(userId);
@@ -746,14 +753,14 @@ app.post('/api/user/phrases', authenticateToken, (req, res) => {
       createdAt: phrase.createdAt || new Date().toISOString()
     };
     if (phrases.some((p) => p.text === entry.text)) {
-      return res.status(400).json({ error: '该短语已存在' });
+      return sendApiError(res, 400, 'common.duplicate');
     }
     phrases.push(entry);
     DB.setPhrases(userId, phrases);
     res.json({ success: true, phrase: entry });
   } catch (error) {
     console.error('[User] 添加快捷短语失败:', error);
-    res.status(500).json({ error: '服务器错误' });
+    res.status(500).json(apiError('error.unknown'));
   }
 });
 
@@ -765,7 +772,7 @@ app.delete('/api/user/phrases/:id', authenticateToken, (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('[User] 删除快捷短语失败:', error);
-    res.status(500).json({ error: '服务器错误' });
+    res.status(500).json(apiError('error.unknown'));
   }
 });
 
@@ -817,7 +824,7 @@ app.delete('/api/sync/clear', authenticateToken, (req, res) => {
     res.json({ success: true, message: '云端数据已清除' });
   } catch (error) {
     console.error('[Sync] 清除云端数据失败:', error);
-    res.status(500).json({ error: '服务器错误' });
+    res.status(500).json(apiError('error.unknown'));
   }
 });
 
@@ -857,7 +864,7 @@ app.get('/api/market/my-scenes', authenticateToken, (req, res) => {
 app.get('/api/market/scenes/:id', (req, res) => {
   const scene = DB.findSceneById(req.params.id);
   if (!scene || !scene.isPublic) {
-    return res.status(404).json({ error: '场景不存在' });
+    return sendApiError(res, 404, 'error.not_found', '场景不存在');
   }
   res.json({ scene });
 });
@@ -876,7 +883,7 @@ function shareSceneHandler(req, res) {
   const userId = req.user.userId;
 
   if (!scene?.name || !scene?.fields?.length) {
-    return res.status(400).json({ error: '场景信息不完整' });
+    return sendApiError(res, 400, 'error.invalid_input', '场景信息不完整');
   }
 
   const newScene = {
@@ -903,7 +910,7 @@ function likeSceneHandler(req, res) {
   const sceneId = req.params.id;
   const userId = req.user.userId;
   const scene = DB.findSceneById(sceneId);
-  if (!scene) return res.status(404).json({ error: '场景不存在' });
+  if (!scene) return sendApiError(res, 404, 'error.not_found', '场景不存在');
 
   const result = DB.toggleLike(sceneId, userId);
   res.json({ success: true, liked: result.liked });
@@ -924,7 +931,7 @@ app.delete('/api/market/scenes/:id/like', authenticateToken, (req, res) => {
 function useSceneHandler(req, res) {
   const sceneId = req.params.id;
   const scene = DB.findSceneById(sceneId);
-  if (!scene) return res.status(404).json({ error: '场景不存在' });
+  if (!scene) return sendApiError(res, 404, 'error.not_found', '场景不存在');
 
   const key = req.user?.userId || ipHash(req);
   const result = DB.incrementSceneUse(sceneId, key);
@@ -939,7 +946,7 @@ app.post('/api/market/scenes/:id/use', marketUseLimiter, optionalAuth, useSceneH
 
 function deleteSceneHandler(req, res) {
   const ok = DB.deleteScene(req.params.id, req.user.userId);
-  if (!ok) return res.status(403).json({ error: '删除失败或无权限' });
+  if (!ok) return sendApiError(res, 403, 'error.forbidden', '删除失败或无权限');
   res.json({ success: true });
 }
 
@@ -973,20 +980,20 @@ app.get('/api/scenes/catalog', (req, res) => {
 const classifyLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: parseInt(process.env.CLASSIFY_RATE_LIMIT_MAX, 10) || 15,
-  message: { error: '粘贴分析过于频繁' }
+  message: apiError('error.rate_limit.paste')
 });
 
 app.post('/api/ai/classify-paste', classifyLimiter, optionalAuth, async (req, res) => {
   try {
     const { text } = req.body;
     if (!text || String(text).trim().length < 2) {
-      return res.status(400).json({ error: '请提供有效文本' });
+      return sendApiError(res, 400, 'error.invalid_input', '请提供有效文本');
     }
     const result = await classifyPaste(text);
     res.json(result);
   } catch (error) {
     console.error('[Classify] 失败:', error);
-    res.status(500).json({ error: error.message || '分类失败' });
+    res.status(500).json(apiError('error.ai.classify_failed', error.message || undefined));
   }
 });
 
@@ -995,7 +1002,7 @@ app.post('/api/ai/generate', optionalAuth, quota.checkQuota, async (req, res) =>
     const { prompt, temperature = 0.7, maxTokens = 1000, model } = req.body;
 
     if (!prompt) {
-      return res.status(400).json({ error: '缺少 prompt' });
+      return sendApiError(res, 400, 'error.invalid_input', '缺少 prompt');
     }
 
     const safePrompt = redactSensitiveText(prompt);
@@ -1015,7 +1022,7 @@ app.post('/api/ai/generate', optionalAuth, quota.checkQuota, async (req, res) =>
     });
   } catch (error) {
     console.error('[AI] 生成失败:', error);
-    res.status(500).json({ error: error.message || 'AI 生成失败' });
+    res.status(500).json(apiError('error.ai.generate_failed', error.message || undefined));
   }
 });
 
@@ -1024,7 +1031,7 @@ app.post('/api/ai/generate-stream', optionalAuth, quota.checkQuota, async (req, 
     const { prompt, temperature = 0.7, maxTokens = 1000, model } = req.body;
 
     if (!prompt) {
-      return res.status(400).json({ error: '缺少 prompt' });
+      return sendApiError(res, 400, 'error.invalid_input', '缺少 prompt');
     }
 
     const safePrompt = redactSensitiveText(prompt);
@@ -1036,7 +1043,7 @@ app.post('/api/ai/generate-stream', optionalAuth, quota.checkQuota, async (req, 
   } catch (error) {
     console.error('[AI] 流式生成失败:', error);
     if (!res.headersSent) {
-      res.status(500).json({ error: error.message || '流式生成失败' });
+      res.status(500).json(apiError('error.ai.stream_failed', error.message || undefined));
     }
   }
 });
@@ -1048,7 +1055,7 @@ app.post('/api/feedback', optionalAuth, async (req, res) => {
     const { type, sceneId, sceneName, tone, reasons, comment, textPreview, meta } = req.body;
 
     if (!type || !['helpful', 'not_helpful'].includes(type)) {
-      return res.status(400).json({ error: '无效的反馈类型' });
+      return sendApiError(res, 400, 'error.invalid_input', '无效的反馈类型');
     }
 
     const entry = {
@@ -1071,7 +1078,7 @@ app.post('/api/feedback', optionalAuth, async (req, res) => {
     res.status(201).json({ success: true, id: entry.id });
   } catch (error) {
     console.error('[Feedback] 保存失败:', error);
-    res.status(500).json({ error: '反馈保存失败' });
+    res.status(500).json(apiError('error.unknown', '反馈保存失败'));
   }
 });
 
@@ -1136,7 +1143,7 @@ app.post('/api/events', optionalAuth, (req, res) => {
   try {
     const { name, sceneId, meta } = req.body;
     if (!name || !ALLOWED_EVENTS.has(name)) {
-      return res.status(400).json({ error: '无效的事件名称' });
+      return sendApiError(res, 400, 'error.invalid_input', '无效的事件名称');
     }
 
     const entry = {
@@ -1153,7 +1160,7 @@ app.post('/api/events', optionalAuth, (req, res) => {
     res.status(201).json({ success: true, id: entry.id });
   } catch (error) {
     console.error('[Events] 保存失败:', error);
-    res.status(500).json({ error: '事件保存失败' });
+    res.status(500).json(apiError('error.unknown', '事件保存失败'));
   }
 });
 

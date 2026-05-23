@@ -15,7 +15,7 @@
 | scene-translations.en | ✅ 无汉字 |
 | 发信（Resend） | ✅ |
 | i18n UI 字典 zh/en | ✅ 已补齐缺口并加 API 错误映射 |
-| 后端 API 错误语言 | ⚠️ 源仍为中文；英文 UI 经 `translateApiError` 覆盖 40+ 常见文案 |
+| 后端 API 错误语言 | ✅ 主要接口返回 `errorCode`；英文 UI 优先 `t(errorCode)`，保留中文兜底映射 |
 | 法务页同步 | ✅ `legal-constants.js` + `npm run legal:sync` |
 
 ---
@@ -34,7 +34,7 @@
 
 | ID | 项 | 建议 |
 |----|-----|------|
-| P2-API | 后端 50+ 条中文 `error` 字符串未全部映射 | 长期：API 返回 `errorCode` + 前端 `t()` |
+| P2-API | AI 分类/生成失败等动态 `error.message` 可能仍为中文 | 后续为 AI 路由增加 `error.ai_failed` 等键 |
 | P2-LEG | 仓库根目录 `privacy-policy.html` 等旧副本 | 仅作归档；生产以 `public/` 为准 |
 | P2-DIA | `dialogue.js` 用中文关键词判断回复情绪 | 仅影响对话模拟；可改多语言关键词 |
 | P2-SC | 通用键 `scene.field.reason` EN 为 “Cancellation Reason” | 各场景优先用 `scene.field.{id}.reason`；请假场景显示正常 |

@@ -427,7 +427,9 @@ const translations = {
     'auth.error.username_required': '请输入用户名',
     'auth.error.email_required': '请输入邮箱',
     'auth.error.email_invalid': '邮箱格式不正确',
-    'auth.error.password_required': '请输入密码',
+    'auth.error.password_required': '请提供当前密码，且新密码至少 6 位',
+    'auth.error.password_confirm_delete': '请提供密码以确认删除账号',
+    'error.admin.forbidden': '无权限访问统计数据',
     'auth.error.password_short': '密码至少6位',
     'auth.error.password_mismatch': '两次密码不一致',
     'user.welcome.back': '欢迎回来',
@@ -531,6 +533,9 @@ const translations = {
     'error.forbidden': '无权限执行此操作',
     'error.not_found': '未找到请求的资源',
     'error.invalid_input': '输入无效或不完整',
+    'error.ai.classify_failed': '场景分析失败，请稍后重试',
+    'error.ai.generate_failed': 'AI 生成失败，请稍后重试',
+    'error.ai.stream_failed': '流式生成失败，请稍后重试',
     'error.loading': '加载失败',
     'error.api_proxy_hint': '请配置 VITE_API_URL 或检查 vercel.json 是否指向正确的 Render API',
     
@@ -1120,7 +1125,9 @@ const translations = {
     'auth.error.username_required': 'Username is required',
     'auth.error.email_required': 'Email is required',
     'auth.error.email_invalid': 'Invalid email format',
-    'auth.error.password_required': 'Password is required',
+    'auth.error.password_required': 'Provide your current password and a new password (at least 6 characters)',
+    'auth.error.password_confirm_delete': 'Enter your password to confirm account deletion',
+    'error.admin.forbidden': 'You do not have permission to view admin statistics',
     'auth.error.password_short': 'Password must be at least 6 characters',
     'auth.error.password_mismatch': 'Passwords do not match',
     'user.welcome.back': 'Welcome Back',
@@ -1226,6 +1233,9 @@ const translations = {
     'error.forbidden': 'You do not have permission for this action',
     'error.not_found': 'The requested resource was not found',
     'error.invalid_input': 'Invalid or incomplete input',
+    'error.ai.classify_failed': 'Scene analysis failed. Please try again.',
+    'error.ai.generate_failed': 'AI generation failed. Please try again.',
+    'error.ai.stream_failed': 'Streaming failed. Please try again.',
     
     // Auth Errors
     'auth.error.empty.fields': 'Please fill all required fields',
@@ -1484,7 +1494,11 @@ const API_ERROR_ZH_TO_KEY = [
   ['令牌无效或已过期', 'auth.error.token.expired']
 ];
 
-export function translateApiError(message) {
+export function translateApiError(message, errorCode) {
+  if (errorCode) {
+    const fromCode = t(errorCode);
+    if (fromCode !== errorCode) return fromCode;
+  }
   if (!message || typeof message !== 'string') return message;
   const lang = state.language || currentLanguage;
   if (lang !== 'en') return message;

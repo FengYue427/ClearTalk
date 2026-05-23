@@ -50,7 +50,7 @@ async function request(endpoint, options = {}) {
     if (!finalResponse.ok) {
       const error = await finalResponse.json().catch(() => ({ message: 'Request failed' }));
       const raw = error.error || error.message || `HTTP ${finalResponse.status}`;
-      const msg = translateApiError(raw);
+      const msg = translateApiError(raw, error.errorCode);
       if (finalResponse.status === 403 && url.includes('/api/') && !API_BASE_URL) {
         throw new Error(`${msg} — ${t('error.api_proxy_hint')}`);
       }
