@@ -524,6 +524,7 @@ const translations = {
     'error.500': '服务器内部错误',
     'error.unknown': '未知错误，请重试',
     'error.timeout': '请求超时，请检查网络',
+    'error.rate_limit': '请求过于频繁，请稍后再试',
     'error.loading': '加载失败',
     'error.api_proxy_hint': '请配置 VITE_API_URL 或检查 vercel.json 是否指向正确的 Render API',
     
@@ -542,6 +543,10 @@ const translations = {
     'auth.error.account.exists': '账号已存在',
     'auth.error.account.not.found': '账号不存在',
     'auth.error.login.required': '请先登录',
+    'auth.error.password.short': '密码至少6位',
+    'auth.error.user.exists': '用户名或邮箱已被使用',
+    'auth.error.wrong.password': '用户名或密码错误',
+    'auth.error.email.not.found': '该邮箱未注册',
     
     // 设置页面
     'settings.title': '设置',
@@ -679,6 +684,13 @@ const translations = {
     'common.recommended': 'Recommended',
     'common.best': 'Best',
     'loading': 'Loading...',
+    'input.title': 'Fill in details',
+    'input.step.fill': 'Fill in details',
+    'input.step.confirm': 'Confirm details',
+    'input.step.generate': 'Generate text',
+    'input.next': 'Next: confirm',
+    'history.item.favorited': 'Added to favorites',
+    'history.item.unfavorited': 'Removed from favorites',
     'save': 'Save',
     'cancel': 'Cancel',
     'confirm': 'Confirm',
@@ -1181,6 +1193,7 @@ const translations = {
     'error.timeout': 'Request timed out, please check network',
     'error.loading': 'Loading failed',
     'error.api_proxy_hint': 'Set VITE_API_URL or check vercel.json points to the correct Render API',
+    'error.rate_limit': 'Too many requests. Please try again later.',
     
     // Auth Errors
     'auth.error.empty.fields': 'Please fill all required fields',
@@ -1198,6 +1211,9 @@ const translations = {
     'auth.register.success': 'Signed up successfully',
     'auth.logout.success': 'Signed out successfully',
     'auth.error.login.required': 'Please login first',
+    'auth.login.required': 'Please sign in first',
+    'auth.error.account.exists': 'Account already exists',
+    'auth.error.account.not.found': 'Account not found',
     
     // Settings
     'settings.title': 'Settings',
@@ -1382,6 +1398,36 @@ export function trScene(key) {
   return lang === 'zh' ? (translations.zh?.[key] ?? key) : key;
 }
 
+/** 英文模式下将后端中文错误映射为 i18n（后端暂未返回 error code） */
+const API_ERROR_ZH_TO_KEY = [
+  ['验证码错误或已过期', 'auth.error.invalid.code'],
+  ['验证码发送失败', 'auth.error.send.code.failed'],
+  ['邮件认证失败', 'auth.error.send.code.failed'],
+  ['邮件服务暂未开通', 'auth.error.send.code.failed'],
+  ['请输入有效的邮箱地址', 'auth.error.email_invalid'],
+  ['用户名或密码错误', 'auth.error.user.not.found'],
+  ['密码至少需要6个字符', 'auth.error.password_short'],
+  ['密码至少6个字符', 'auth.error.password_short'],
+  ['用户名或邮箱已被使用', 'auth.error.user.exists'],
+  ['今日 AI 生成次数已用完', 'quota.exceeded'],
+  ['今日生成次数已用完', 'quota.exceeded'],
+  ['请求过于频繁', 'error.rate_limit'],
+  ['发送次数过多', 'error.rate_limit'],
+  ['服务器错误', 'error.unknown'],
+  ['未提供访问令牌', 'auth.error.login.required'],
+  ['令牌无效或已过期', 'auth.error.token.expired']
+];
+
+export function translateApiError(message) {
+  if (!message || typeof message !== 'string') return message;
+  const lang = state.language || currentLanguage;
+  if (lang !== 'en') return message;
+  for (const [zh, key] of API_ERROR_ZH_TO_KEY) {
+    if (message.includes(zh)) return t(key);
+  }
+  return message;
+}
+
 // 获取翻译文本
 export function t(key, params = {}) {
   const lang = state.language || currentLanguage;
@@ -1439,4 +1485,13 @@ export function hasTranslation(key) {
   return !!translations[lang]?.[key];
 }
 
-export default { t, setLanguage, initI18n, getSupportedLanguages, getCurrentLanguage, hasTranslation };
+export default {
+  t,
+  trScene,
+  translateApiError,
+  setLanguage,
+  initI18n,
+  getSupportedLanguages,
+  getCurrentLanguage,
+  hasTranslation
+};

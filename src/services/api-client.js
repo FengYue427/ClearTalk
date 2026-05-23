@@ -4,7 +4,7 @@
 
 import { API_BASE_URL } from '../core/config.js';
 import { logger } from '../core/logger.js';
-import { t } from '../core/i18n.js';
+import { t, translateApiError } from '../core/i18n.js';
 
 // 请求拦截器
 const requestInterceptors = [];
@@ -49,7 +49,8 @@ async function request(endpoint, options = {}) {
     // 处理错误
     if (!finalResponse.ok) {
       const error = await finalResponse.json().catch(() => ({ message: 'Request failed' }));
-      const msg = error.error || error.message || `HTTP ${finalResponse.status}`;
+      const raw = error.error || error.message || `HTTP ${finalResponse.status}`;
+      const msg = translateApiError(raw);
       if (finalResponse.status === 403 && url.includes('/api/') && !API_BASE_URL) {
         throw new Error(`${msg} — ${t('error.api_proxy_hint')}`);
       }
