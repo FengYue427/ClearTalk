@@ -21,6 +21,7 @@
     "check:production": "node scripts/check-production-config.mjs",
     "launch:verify": "node scripts/launch-verify.mjs",
     "smoke:production": "node scripts/production-smoke.mjs",
+    "verify:production": "node scripts/verify-production-api.mjs",
     "lint": "eslint src --ext .js",
     "lint:fix": "eslint src --ext .js --fix",
     "format": "prettier --write \"src/**/*.{js,css,html}\""

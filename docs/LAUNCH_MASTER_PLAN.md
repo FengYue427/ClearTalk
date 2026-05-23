@@ -135,6 +135,6 @@ gantt
 3. 反馈率、5xx（有 Sentry 后）  
 4. 下周只选 **1 个** P0/P1 项，避免并行铺功能  
 
-**下一动作（建议今天）**：运行 `npm run smoke:production`（已通过 2026-05-22）→ 浏览器英文模式生成验收 → 配 SMTP 进入 B 档。
+**下一动作（建议今天）**：跟 [`POST_DEPLOY_DAY1.md`](POST_DEPLOY_DAY1.md) → 配 SMTP [`SMTP_RENDER_SETUP.md`](SMTP_RENDER_SETUP.md) → 发内测 [`BETA_INVITE.md`](BETA_INVITE.md)
 
-**自动验证**：`npm run smoke:production` · 日志 [`P0_VERIFICATION_LOG.md`](P0_VERIFICATION_LOG.md)
+**一键检查 API**：`npm run verify:production`

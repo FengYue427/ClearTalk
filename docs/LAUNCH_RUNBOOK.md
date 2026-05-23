@@ -100,6 +100,7 @@ npm run smoke:production
 | 现象 | 处理 |
 |------|------|
 | 注册 405，`POST ...vercel.app/api/...` | 前端应请求 Render；强刷缓存；确认 `VITE_API_URL` 与 `vercel.json` 已部署 |
+| 部署后下一步 | [`POST_DEPLOY_DAY1.md`](POST_DEPLOY_DAY1.md) · SMTP：[`SMTP_RENDER_SETUP.md`](SMTP_RENDER_SETUP.md) |
 | CORS 错误 | 检查 `ALLOWED_ORIGINS` |
 | 429 生成次数 | 正常配额；调 `FREE_DAILY_GENERATIONS` 或 Pro 白名单 |
 | `/health/ready` 503 | 生产未配置任何 AI Key |

@@ -1,8 +1,10 @@
 # ClearTalk 上市签收单（最终）
 
 > 用途：对外「真正上市」前最后一页勾选。  
-> 代码基线：`main` @ `121971a9` 及之后（严格双语 i18n + launch plan）。  
-> 自动验证记录：[`P0_VERIFICATION_LOG.md`](P0_VERIFICATION_LOG.md)
+> 代码基线：`main` @ `d63c2097` 及之后。  
+> 自动验证：[`P0_VERIFICATION_LOG.md`](P0_VERIFICATION_LOG.md) · 部署后行动：[`POST_DEPLOY_DAY1.md`](POST_DEPLOY_DAY1.md)
+
+**部署状态（你方确认已完成）**：Vercel Web + Render API 已上线 → **A 档基本达成**，进入 **B 档软启动**。
 
 ---
 
@@ -20,7 +22,7 @@ npm run launch:verify
 
 | # | 检查项 | 通过 |
 |---|--------|------|
-| B1 | Vercel 最新部署 **Ready**，构建命令为 `npm run build`（非 Flutter） | ☐ |
+| B1 | Vercel 最新部署 **Ready**，构建命令为 `npm run build`（非 Flutter） | ☑ |
 | B2 | 访问生产 URL：首页有 **粘贴分析 + 35 场景** | ☑ |
 | B3 | `VITE_API_URL` 指向正确 Render 服务 | ☑ |
 | B4 | Render `/health/ready` → `status: ok` | ☑ |
@@ -67,8 +69,8 @@ npm run launch:verify
 
 **结论（勾选其一）：**
 
+- [ ] **有条件上市** — 内测期，SMTP/域名待补（**当前推荐**：部署已完成，配 SMTP + C 表冒烟后勾选）  
 - [ ] **准予上市** — A 全过，B/C 无阻塞项  
-- [ ] **有条件上市** — 内测期，SMTP/域名待补  
 - [ ] **暂缓** — 说明阻塞项：________________
 
 ---

@@ -56,7 +56,7 @@
 | `FREE_DAILY_GENERATIONS` | `20` | 可选 |
 | `PRO_DAILY_GENERATIONS` | `200` | 可选 |
 
-6. **SMTP（正式对外强烈建议）**：
+6. **SMTP（正式对外强烈建议）** — 逐步说明见 [`SMTP_RENDER_SETUP.md`](SMTP_RENDER_SETUP.md)：
 
 | 变量 | 示例 |
 |------|------|
