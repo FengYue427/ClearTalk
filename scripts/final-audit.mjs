@@ -40,6 +40,19 @@ else pass(`i18n.js zh/en parity (${zhKeys.size} keys)`);
 
 if (missingZh.length) fail('I18N-002', `i18n.js: ${missingZh.length} keys only in en: ${missingZh.slice(0, 8).join(', ')}`);
 
+// --- t() keys used in src vs zh/en ---
+const { spawnSync } = await import('child_process');
+const i18nAudit = spawnSync('node', ['scripts/audit-i18n-keys.mjs'], {
+  cwd: root,
+  encoding: 'utf8',
+  shell: process.platform === 'win32'
+});
+if (i18nAudit.status !== 0) {
+  fail('I18N-006', `audit-i18n-keys: ${(i18nAudit.stdout || '').trim()}`);
+} else {
+  pass('All t() keys exist in zh/en');
+}
+
 // --- scene-translations EN CJK ---
 const sceneTr = fs.readFileSync(path.join(root, 'src/core/scene-translations.generated.js'), 'utf8');
 const enBlock = sceneTr.split('en: {')[1]?.split('\n};')[0] || '';

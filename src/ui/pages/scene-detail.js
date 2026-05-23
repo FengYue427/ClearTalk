@@ -458,11 +458,7 @@ async function generateText() {
   
   if (missingFields.length > 0) {
     const sceneId = state.currentScene?.id || 'generic';
-    const missingLabels = missingFields.map(f => {
-      const dynamicKey = `scene.field.${sceneId}.${f.key}`;
-      const labelText = t(dynamicKey) !== dynamicKey ? t(dynamicKey) : (f.translationKey ? t(f.translationKey) : f.label);
-      return labelText;
-    });
+    const missingLabels = missingFields.map((f) => getFieldLabel(f, sceneId));
     showToast(`${t('scene.info.empty.fields')}: ${missingLabels.join(', ')}`);
     return;
   }

@@ -217,7 +217,7 @@ async function loadScenes() {
       container.innerHTML = `
         <div class="market-error">
           <p>${t('error.loading')}</p>
-          <p class="error-hint">${error.message}</p>
+          <p class="error-hint">${escapeHtml(translateApiError(error.message) || error.message || '')}</p>
         </div>
       `;
     }

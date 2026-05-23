@@ -113,6 +113,14 @@ if (r.status !== 0) {
   ok('scenes:build');
 }
 
+r = run('npm', ['run', 'i18n:audit']);
+if (r.status !== 0) {
+  if (r.stdout) console.error(r.stdout);
+  fail('i18n:audit 失败（代码引用了未定义的 t() 键）');
+} else {
+  ok('i18n:audit');
+}
+
 r = run('npm', ['run', 'build']);
 if (r.status !== 0) {
   console.error(r.stderr || r.stdout);

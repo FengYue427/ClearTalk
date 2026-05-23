@@ -830,8 +830,8 @@ async function handleSendCode() {
   const result = await UserService.sendVerificationCode(email, 'login');
   
   if (result.success) {
-    showToast('✅ ' + (result.message || t('auth.code.sent')));
-    if (result.code) {
+    showToast('✅ ' + (translateApiError(result.message) || result.message || t('auth.code.sent')));
+    if (import.meta.env.DEV && result.code) {
       console.log('Verification code:', result.code);
     }
     
@@ -948,8 +948,8 @@ async function handleForgotPassword(e) {
   const result = await UserService.forgotPassword(email);
   
   if (result.success) {
-    showSuccessMessage(result.message);
-    if (result.resetUrl) {
+    showSuccessMessage(translateApiError(result.message) || result.message || t('auth.forgot.sent'));
+    if (import.meta.env.DEV && result.resetUrl) {
       console.log('Reset URL:', result.resetUrl);
     }
   } else {

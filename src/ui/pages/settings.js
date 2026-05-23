@@ -10,7 +10,7 @@ import { logger } from '../../core/logger.js';
 import { isOnline, downloadFile, events } from '../../core/utils.js';
 import { showToast, showConfirm, showActionSheet } from '../components/index.js';
 import { navigateTo } from './router.js';
-import { t, setLanguage } from '../../core/i18n.js';
+import { t, setLanguage, translateApiError } from '../../core/i18n.js';
 import { getLegalPageUrl, getLegalContactMailto } from '../../core/legal-urls.js';
 import { PROXY_AI_MODELS, DEFAULT_SETTINGS } from '../../core/config.js';
 import { QuotaService } from '../../services/quota-service.js';
@@ -532,10 +532,10 @@ async function testAiConnection() {
     if (result.success) {
       showToast(t('toast.ai.success') + result.model);
     } else {
-      showToast(t('toast.ai.fail') + result.error);
+      showToast(t('toast.ai.fail') + (translateApiError(result.error) || result.error || ''));
     }
   } catch (error) {
-    showToast(t('toast.ai.error') + error.message);
+    showToast(t('toast.ai.error') + (translateApiError(error.message) || error.message || ''));
   }
 }
 
