@@ -42,10 +42,20 @@ function getSmtpCredentials() {
   };
 }
 
+function getPortsToTry(configuredPort, emailHost) {
+  const is163 = /163\.com$/i.test(emailHost) || emailHost.includes('smtp.163.com');
+  // Render 等海外机房访问 163 的 465 常被墙/超时，优先 STARTTLS 587
+  if (process.env.RENDER && is163) {
+    return configuredPort === 587 ? [587, 465] : [587, 465];
+  }
+  return configuredPort === 465 ? [465, 587] : [configuredPort, 465];
+}
+
 function buildSmtpTransport(portOverride) {
   const { host: emailHost, user: emailUser, pass: emailPass } = getSmtpCredentials();
   const emailPort = portOverride ?? (parseInt(process.env.EMAIL_PORT, 10) || 587);
   const secure = emailPort === 465;
+  const connectTimeout = secure ? 15000 : 25000;
 
   return nodemailer.createTransport({
     host: emailHost,
@@ -55,9 +65,9 @@ function buildSmtpTransport(portOverride) {
       user: emailUser,
       pass: emailPass
     },
-    connectionTimeout: 25000,
-    greetingTimeout: 25000,
-    socketTimeout: 25000,
+    connectionTimeout: connectTimeout,
+    greetingTimeout: connectTimeout,
+    socketTimeout: connectTimeout,
     ...(secure
       ? { tls: { servername: emailHost, minVersion: 'TLSv1.2' } }
       : { requireTLS: true, tls: { servername: emailHost, minVersion: 'TLSv1.2' } })
@@ -108,9 +118,12 @@ async function initEmailServiceAsync() {
   const configuredPort = parseInt(process.env.EMAIL_PORT, 10) || 465;
   console.log(`[Email] 邮箱服务已配置 (${emailHost}:${configuredPort})`);
 
-  const portsToTry = configuredPort === 465 ? [465, 587] : [configuredPort, 465];
+  const portsToTry = [...new Set(getPortsToTry(configuredPort, emailHost))];
+  if (process.env.RENDER && portsToTry[0] === 587) {
+    console.log('[Email] Render 检测到 163，优先尝试端口 587 (STARTTLS)');
+  }
 
-  for (const port of [...new Set(portsToTry)]) {
+  for (const port of portsToTry) {
     try {
       transporter = await verifySmtpTransport(buildSmtpTransport(port), `port ${port}`);
       if (port !== configuredPort) {

@@ -94,7 +94,8 @@ JSON 中 `"checks": { "email": true }`
 | 535 / Authentication failed | 用了登录密码；改 **授权码**；授权码泄露后需在 163 **重新生成** 并更新 Render `EMAIL_PASS` |
 | API 500 / 验证码发送失败 | Render **Logs** 搜 `[Email] SMTP 连接验证失败` 或 `EAUTH`；先修 SMTP 再 Deploy |
 | `email: true` 但收不到信 | `checks.email` 只表示变量已配；看 `emailSmtpVerified` 或日志是否验证成功 |
-| Connection timeout | 确认 `465`；或换 `587` + Redeploy |
+| Connection timeout / `ETIMEDOUT` | **Render 上很常见**：把 `EMAIL_PORT` 改为 **`587`** 并 Redeploy；日志应出现 `优先尝试端口 587` |
+| Render 上 465/587 均超时 | 163 SMTP 可能被海外机房阻断，改用 **Resend / SendGrid** 或国内主机部署 API |
 | 发送成功但进垃圾箱 | 正常；内测可提示用户看垃圾箱 |
 | `email: false` | 缺变量或未 Redeploy；看 Render 日志 `[Email]` |
 
